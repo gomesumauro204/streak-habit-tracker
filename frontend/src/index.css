@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  --color-brand-50: #f0fdfa;
+  --color-brand-100: #ccfbf1;
+  --color-brand-200: #99f6e4;
+  --color-brand-300: #5eead4;
+  --color-brand-400: #2dd4bf;
+  --color-brand-500: #14b8a6;
+  --color-brand-600: #0d9488;
+  --color-brand-700: #0f766e;
+  --color-brand-800: #115e59;
+  --color-brand-900: #134e4a;
+
+  --color-surface: #fafafa;
+  --color-surface-raised: #ffffff;
+  --color-surface-overlay: #f4f4f5;
+  --color-border: #e4e4e7;
+  --color-muted: #71717a;
+  --color-foreground: #18181b;
+}
+
+.dark {
+  --color-surface: #09090b;
+  --color-surface-raised: #18181b;
+  --color-surface-overlay: #27272a;
+  --color-border: #3f3f46;
+  --color-muted: #a1a1aa;
+  --color-foreground: #fafafa;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-surface text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  ::selection {
+    @apply bg-brand-500/30;
+  }
+}
+
+/* スクロールバーのスタイリング */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+}

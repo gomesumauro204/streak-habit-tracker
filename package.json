@@ -1,0 +1,16 @@
+{
+  "name": "habit-tracker",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,green \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
+    "build": "pnpm --filter backend build && pnpm --filter frontend build",
+    "start": "pnpm --filter backend start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

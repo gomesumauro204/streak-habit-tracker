@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": ["-c", "export PATH=\"$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin:$PATH\" && cd frontend && /bin/sh node_modules/.bin/vite --port 5173"],
+      "port": 5173
+    }
+  ]
+}
