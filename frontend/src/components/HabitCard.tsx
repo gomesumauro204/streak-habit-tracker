@@ -5,9 +5,9 @@ import { Heatmap } from './Heatmap';
 
 interface HabitCardProps {
   habit: Habit;
-  onToggle: (id: number) => Promise<unknown>;
+  onToggle: (id: number) => unknown;
   onEdit: (habit: Habit) => void;
-  onDelete: (id: number) => Promise<void>;
+  onDelete: (id: number) => void;
 }
 
 export function HabitCard({ habit, onToggle, onEdit, onDelete }: HabitCardProps) {

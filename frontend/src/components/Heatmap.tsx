@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { api } from '../api/client';
+import { useMemo, useState } from 'react';
+import { storage } from '../lib/storage';
 import type { HeatmapDay } from '../types';
 
 interface HeatmapProps {
@@ -11,31 +11,12 @@ const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 
 /** GitHub風の達成ヒートマップ */
 export function Heatmap({ habitId, color }: HeatmapProps) {
-  const [days, setDays] = useState<HeatmapDay[]>([]);
-  const [loading, setLoading] = useState(true);
+  const days = storage.getHeatmap(habitId);
   const [tooltip, setTooltip] = useState<{
     x: number;
     y: number;
     text: string;
   } | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    api
-      .getHeatmap(habitId)
-      .then((data) => {
-        if (!cancelled) setDays(data.days);
-      })
-      .catch(console.error)
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [habitId]);
-
   // 日付を週単位のグリッドに変換（GitHubスタイル: 列=週、行=曜日）
   const weeks = useMemo(() => {
     if (days.length === 0) return [];
@@ -63,14 +44,6 @@ export function Heatmap({ habitId, color }: HeatmapProps) {
   }, [days]);
 
   const completedCount = days.filter((d) => d.completed).length;
-
-  if (loading) {
-    return (
-      <div className="h-20 flex items-center justify-center">
-        <div className="h-4 w-4 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="relative">
