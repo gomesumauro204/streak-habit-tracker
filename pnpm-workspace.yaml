@@ -1,6 +1,7 @@
 packages:
   - frontend
   - backend
+  - portfolio
 allowBuilds:
   better-sqlite3: true
   esbuild: true

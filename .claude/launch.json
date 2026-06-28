@@ -6,6 +6,13 @@
       "runtimeExecutable": "/bin/sh",
       "runtimeArgs": ["-c", "export PATH=\"$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin:$PATH\" && cd frontend && /bin/sh node_modules/.bin/vite --port 5173"],
       "port": 5173
+    },
+    {
+      "name": "portfolio",
+      "runtimeExecutable": "/Users/fukuharakeisuke/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "runtimeArgs": ["/Users/fukuharakeisuke/Downloads/セットアップ/my-workspace/portfolio/node_modules/vite/bin/vite.js", "--root", "/Users/fukuharakeisuke/Downloads/セットアップ/my-workspace/portfolio", "--port", "$PORT"],
+      "port": 5175,
+      "autoPort": true
     }
   ]
 }
