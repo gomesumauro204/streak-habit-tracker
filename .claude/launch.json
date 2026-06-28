@@ -10,8 +10,8 @@
     {
       "name": "portfolio",
       "runtimeExecutable": "/Users/fukuharakeisuke/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",
-      "runtimeArgs": ["/Users/fukuharakeisuke/Downloads/セットアップ/my-workspace/portfolio/node_modules/vite/bin/vite.js", "--root", "/Users/fukuharakeisuke/Downloads/セットアップ/my-workspace/portfolio", "--port", "$PORT"],
-      "port": 5175,
+      "runtimeArgs": ["/Users/fukuharakeisuke/Downloads/セットアップ/my-workspace/portfolio/node_modules/vite/bin/vite.js", "/Users/fukuharakeisuke/Downloads/セットアップ/my-workspace/portfolio", "--port", "$PORT"],
+      "port": 5176,
       "autoPort": true
     }
   ]
