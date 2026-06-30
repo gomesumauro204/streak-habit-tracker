@@ -4,8 +4,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: '#1a2e5a',
-        'navy-dark': '#111e3d',
+        navy: '#0f1e3c',
+        'navy-mid': '#1a2e5a',
+        'navy-light': '#2a4a8a',
+      },
+      maxWidth: {
+        '8xl': '88rem',
       },
     },
   },

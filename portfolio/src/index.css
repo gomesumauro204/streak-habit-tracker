@@ -6,14 +6,44 @@
   html {
     scroll-behavior: smooth;
   }
-
   body {
-    @apply text-gray-800 bg-gray-50;
+    @apply text-gray-800 bg-white antialiased;
     font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', sans-serif;
     line-height: 1.8;
   }
-
-  h1, h2, h3, h4 {
-    line-height: 1.4;
+  h1, h2, h3 {
+    line-height: 1.3;
+    letter-spacing: -0.01em;
   }
 }
+
+/* ヒーロー動画なし時のグラデーション背景アニメーション */
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, #0a1628 0%, #1a2e5a 40%, #0d2044 70%, #060d1f 100%);
+  background-size: 300% 300%;
+  animation: gradientShift 12s ease infinite;
+}
+
+/* 浮遊する抽象ドット */
+@keyframes floatA {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.12; }
+  50%       { transform: translate(30px, -40px) scale(1.15); opacity: 0.2; }
+}
+@keyframes floatB {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.08; }
+  50%       { transform: translate(-25px, 35px) scale(0.9); opacity: 0.15; }
+}
+@keyframes floatC {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.06; }
+  50%       { transform: translate(20px, 20px) scale(1.1); opacity: 0.12; }
+}
+
+.blob-a { animation: floatA 14s ease-in-out infinite; }
+.blob-b { animation: floatB 18s ease-in-out infinite; }
+.blob-c { animation: floatC 22s ease-in-out infinite; }
