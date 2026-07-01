@@ -12,116 +12,191 @@
   h1, h2, h3 { line-height: 1.3; letter-spacing: -0.01em; }
 }
 
-/* ============================================
-   ヒーロー：グラデーション背景（動画なし代替）
-   ============================================ */
-@keyframes gradientShift {
+/* ============================================================
+   HERO BACKGROUND SYSTEM
+   層構成：
+   1. .hero-bg-base     — ダーク グラデーション (z=0)
+   2. .hero-video       — 背景動画              (z=1)
+   3. .hero-overlay     — 半透明オーバーレイ    (z=2)
+   4. .hero-deco        — CSS装飾（動画の上）   (z=3)
+   5. コンテンツ                                (z=10)
+   ============================================================ */
+
+/* 1. ベースグラデーション */
+@keyframes gradientDrift {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-
-.hero-gradient {
+.hero-bg-base {
   background: linear-gradient(
-    135deg,
-    #060d1f 0%,
-    #0a1628 30%,
-    #0f2040 60%,
-    #091530 100%
+    125deg,
+    #020810 0%,
+    #0a1628 35%,
+    #0d2044 65%,
+    #060f20 100%
   );
   background-size: 300% 300%;
-  animation: gradientShift 16s ease infinite;
+  animation: gradientDrift 20s ease infinite;
 }
 
-/* ============================================
-   ヒーロー：抽象グリッド線
-   ============================================ */
-.hero-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
-  background-size: 80px 80px;
-  mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
-}
-
-/* ============================================
-   ヒーロー：光のライン
-   ============================================ */
-@keyframes lineSlide {
-  0%   { transform: translateY(-100%) translateX(-30%); opacity: 0; }
-  10%  { opacity: 1; }
-  90%  { opacity: 0.6; }
-  100% { transform: translateY(120vh) translateX(10%); opacity: 0; }
-}
-
-.hero-line {
-  position: absolute;
-  width: 1px;
-  height: 40vh;
-  background: linear-gradient(to bottom, transparent, rgba(99,179,237,0.5), transparent);
-  animation: lineSlide 8s linear infinite;
-}
-.hero-line-1 { left: 62%; animation-delay: 0s;   animation-duration: 9s; }
-.hero-line-2 { left: 74%; animation-delay: 3s;   animation-duration: 11s; opacity: 0.6; }
-.hero-line-3 { left: 55%; animation-delay: 6.5s; animation-duration: 8s;  opacity: 0.4; }
-
-/* ============================================
-   ヒーロー：浮遊オーブ
-   ============================================ */
-@keyframes floatA {
-  0%, 100% { transform: translate(0, 0) scale(1);    opacity: 0.12; }
-  50%       { transform: translate(20px, -30px) scale(1.1); opacity: 0.2; }
-}
-@keyframes floatB {
-  0%, 100% { transform: translate(0, 0) scale(1);    opacity: 0.08; }
-  50%       { transform: translate(-20px, 25px) scale(0.9); opacity: 0.14; }
-}
-@keyframes floatC {
-  0%, 100% { transform: translate(0, 0) scale(1);    opacity: 0.06; }
-  50%       { transform: translate(15px, 15px) scale(1.05); opacity: 0.1; }
-}
-.blob-a { animation: floatA 14s ease-in-out infinite; }
-.blob-b { animation: floatB 18s ease-in-out infinite; }
-.blob-c { animation: floatC 22s ease-in-out infinite; }
-
-/* ============================================
-   ヒーロー：背景動画
-   PC: 表示・右寄り
-   スマホ: 非表示（CSSグラデーション代替）
-   ============================================ */
+/* 2. 背景動画 — PC・スマホ両方で表示 */
 .hero-video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 65% center;
-  opacity: 0.45;
-  /* スマホでは非表示 */
-  display: none;
+  object-position: 60% center;
+  opacity: 0.55;         /* 動画をしっかり見せる */
+  z-index: 1;
 }
-@media (min-width: 640px) {
-  .hero-video { display: block; }
+/* スマホ: 動画は少し暗く */
+@media (max-width: 639px) {
+  .hero-video { opacity: 0.35; }
 }
 
-/* ============================================
-   ヒーロー：オーバーレイ
-   PC: ネイビー60% / スマホ: 75%（動画なしでも映える）
-   ============================================ */
+/* 3. オーバーレイ — 動画の上に重ねてテキスト保護 */
 .hero-overlay {
   position: absolute;
   inset: 0;
+  z-index: 2;
+  /* 左(テキスト側)は濃く、右(動画側)は薄め */
   background: linear-gradient(
-    to right,
-    rgba(6, 13, 31, 0.85) 0%,
-    rgba(6, 13, 31, 0.75) 50%,
-    rgba(6, 13, 31, 0.55) 100%
+    105deg,
+    rgba(2, 8, 16, 0.82) 0%,
+    rgba(2, 8, 16, 0.65) 45%,
+    rgba(2, 8, 16, 0.40) 100%
   );
 }
 @media (max-width: 639px) {
   .hero-overlay {
-    background: rgba(6, 13, 31, 0.78);
+    background: rgba(2, 8, 16, 0.78);
   }
+}
+
+/* 4. CSS装飾レイヤー（オーバーレイの上 z=3） */
+.hero-deco {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ---- グリッド線 ---- */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(96, 165, 250, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, 0.07) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.6) 15%,
+    rgba(0,0,0,0.6) 85%,
+    transparent 100%
+  );
+}
+
+/* ---- 流れるデータライン ---- */
+@keyframes lineFlow {
+  0%   { transform: translateY(-100%) skewX(-8deg); opacity: 0; }
+  5%   { opacity: 1; }
+  90%  { opacity: 0.7; }
+  100% { transform: translateY(120vh) skewX(-8deg); opacity: 0; }
+}
+.data-line {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 35vh;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(96,165,250,0.7) 40%,
+    rgba(147,197,253,0.9) 60%,
+    transparent 100%
+  );
+}
+.data-line-1 { left: 58%; animation: lineFlow 7s linear 0s   infinite; }
+.data-line-2 { left: 68%; animation: lineFlow 9s linear 2.5s infinite; width: 1px; opacity: 0.6; }
+.data-line-3 { left: 76%; animation: lineFlow 11s linear 5s  infinite; opacity: 0.4; }
+.data-line-4 { left: 63%; animation: lineFlow 8s linear 7s   infinite; opacity: 0.5; }
+
+/* ---- 浮遊オーブ ---- */
+@keyframes orbFloat {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%     { transform: translate(15px,-20px) scale(1.05); }
+  66%     { transform: translate(-10px,15px) scale(0.96); }
+}
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+}
+.hero-orb-1 {
+  width: 500px; height: 500px;
+  top: -10%; right: 5%;
+  background: radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%);
+  animation: orbFloat 16s ease-in-out infinite;
+}
+.hero-orb-2 {
+  width: 350px; height: 350px;
+  bottom: 5%; left: 40%;
+  background: radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 70%);
+  animation: orbFloat 20s ease-in-out infinite reverse;
+}
+
+/* ---- UIパネル風の枠線 ---- */
+@keyframes panelFadeIn {
+  0%   { opacity: 0; transform: scaleX(0.8); }
+  100% { opacity: 1; transform: scaleX(1); }
+}
+.ui-panel {
+  position: absolute;
+  border: 1px solid rgba(96,165,250,0.15);
+  animation: panelFadeIn 1.5s ease forwards;
+}
+.ui-panel-1 {
+  right: 8%;
+  top: 20%;
+  width: 260px;
+  height: 120px;
+  border-color: rgba(96,165,250,0.12);
+  animation-delay: 0.5s;
+  opacity: 0;
+}
+.ui-panel-2 {
+  right: 12%;
+  top: 48%;
+  width: 180px;
+  height: 80px;
+  border-color: rgba(96,165,250,0.09);
+  animation-delay: 0.9s;
+  opacity: 0;
+}
+/* UIパネル内のダミーバー */
+.ui-panel::before {
+  content: '';
+  position: absolute;
+  top: 14px; left: 14px; right: 14px;
+  height: 1px;
+  background: rgba(96,165,250,0.2);
+}
+.ui-panel::after {
+  content: '';
+  position: absolute;
+  top: 28px; left: 14px;
+  width: 40%;
+  height: 1px;
+  background: rgba(96,165,250,0.12);
+}
+
+/* スマホではUIパネルを非表示 */
+@media (max-width: 639px) {
+  .ui-panel { display: none; }
+  .data-line-3, .data-line-4 { display: none; }
 }

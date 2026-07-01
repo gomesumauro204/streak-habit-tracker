@@ -143,48 +143,41 @@ function Hero() {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
 
-      {/* ── 1層目：CSSグラデーション（動画がない場合の完全代替） ── */}
-      <div className="absolute inset-0 hero-gradient" />
+      {/* z=0: ベースグラデーション（常時表示） */}
+      <div className="absolute inset-0 hero-bg-base" />
 
-      {/* ── 2層目：CSSアニメーション装飾（常に表示） ── */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* 光のライン */}
-        <div className="hero-line hero-line-1" />
-        <div className="hero-line hero-line-2" />
-        <div className="hero-line hero-line-3" />
-        {/* 浮遊オーブ */}
-        <div className="blob-a absolute top-[12%] right-[15%] w-[480px] h-[480px]
-          rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="blob-b absolute bottom-[15%] left-[10%] w-[360px] h-[360px]
-          rounded-full bg-indigo-600/10 blur-3xl" />
-        <div className="blob-c absolute top-[50%] left-[50%] w-[280px] h-[280px]
-          rounded-full bg-blue-800/15 blur-2xl" />
-        {/* グリッド線 */}
-        <div className="hero-grid" />
-      </div>
-
-      {/* ── 3層目：背景動画（public/hero-video.mp4） ── */}
-      {/* PC: 動画表示 / スマホ: CSSグラデーションのみ（メディアクエリでhidden） */}
+      {/* z=1: 背景動画 public/hero-video.mp4 */}
       <video
         autoPlay muted loop playsInline
         className="hero-video"
         aria-hidden="true"
-        style={{ objectPosition: '60% center' }}
       >
         <source src="/hero-video.mp4"  type="video/mp4" />
         <source src="/hero-video.webm" type="video/webm" />
       </video>
 
-      {/* ── 4層目：オーバーレイ（PC / スマホで濃度を変える） ── */}
-      <div className="absolute inset-0 hero-overlay" />
+      {/* z=2: オーバーレイ（テキスト保護） */}
+      <div className="hero-overlay" />
 
-      {/* ── コンテンツ ── */}
+      {/* z=3: CSS装飾（グリッド・データライン・UIパネル）*/}
+      <div className="hero-deco">
+        <div className="hero-grid" />
+        <div className="hero-orb hero-orb-1" />
+        <div className="hero-orb hero-orb-2" />
+        <div className="data-line data-line-1" />
+        <div className="data-line data-line-2" />
+        <div className="data-line data-line-3" />
+        <div className="data-line data-line-4" />
+        <div className="ui-panel ui-panel-1" />
+        <div className="ui-panel ui-panel-2" />
+      </div>
+
+      {/* z=10: コンテンツ */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 pt-36 pb-24 w-full">
         <p className="text-[10px] font-bold tracking-[0.35em] text-blue-300 uppercase mb-8">
           AI Business Support
         </p>
 
-        {/* メインコピー：スマホで自然な改行 */}
         <h1 className="text-[2.6rem] sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white
           leading-[1.25] mb-8 max-w-3xl">
           <span className="block">AIとWebツールで、</span>
@@ -192,8 +185,7 @@ function Hero() {
           <span className="block">前に進める。</span>
         </h1>
 
-        <p className="text-sm sm:text-base text-gray-300 leading-[1.9] mb-12
-          max-w-lg">
+        <p className="text-sm sm:text-base text-gray-300 leading-[1.9] mb-12 max-w-lg">
           日々の記録、確認、情報整理、申し送りなどの業務を、
           使いやすい小規模Webツールとして形にします。
         </p>
@@ -216,7 +208,7 @@ function Hero() {
       </div>
 
       {/* スクロールインジケーター */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10
         flex flex-col items-center gap-2 pointer-events-none">
         <span className="text-[9px] tracking-[0.3em] text-white/30 uppercase">Scroll</span>
         <div className="w-px h-10 bg-gradient-to-b from-white/30 to-transparent" />
