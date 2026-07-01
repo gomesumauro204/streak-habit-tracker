@@ -3,21 +3,18 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
+  html { scroll-behavior: smooth; }
   body {
     @apply text-gray-800 bg-white antialiased;
     font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', sans-serif;
     line-height: 1.8;
   }
-  h1, h2, h3 {
-    line-height: 1.3;
-    letter-spacing: -0.01em;
-  }
+  h1, h2, h3 { line-height: 1.3; letter-spacing: -0.01em; }
 }
 
-/* ヒーロー動画なし時のグラデーション背景アニメーション */
+/* ============================================
+   ヒーロー：グラデーション背景（動画なし代替）
+   ============================================ */
 @keyframes gradientShift {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }
@@ -25,25 +22,106 @@
 }
 
 .hero-gradient {
-  background: linear-gradient(135deg, #0a1628 0%, #1a2e5a 40%, #0d2044 70%, #060d1f 100%);
+  background: linear-gradient(
+    135deg,
+    #060d1f 0%,
+    #0a1628 30%,
+    #0f2040 60%,
+    #091530 100%
+  );
   background-size: 300% 300%;
-  animation: gradientShift 12s ease infinite;
+  animation: gradientShift 16s ease infinite;
 }
 
-/* 浮遊する抽象ドット */
+/* ============================================
+   ヒーロー：抽象グリッド線
+   ============================================ */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+}
+
+/* ============================================
+   ヒーロー：光のライン
+   ============================================ */
+@keyframes lineSlide {
+  0%   { transform: translateY(-100%) translateX(-30%); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(120vh) translateX(10%); opacity: 0; }
+}
+
+.hero-line {
+  position: absolute;
+  width: 1px;
+  height: 40vh;
+  background: linear-gradient(to bottom, transparent, rgba(99,179,237,0.5), transparent);
+  animation: lineSlide 8s linear infinite;
+}
+.hero-line-1 { left: 62%; animation-delay: 0s;   animation-duration: 9s; }
+.hero-line-2 { left: 74%; animation-delay: 3s;   animation-duration: 11s; opacity: 0.6; }
+.hero-line-3 { left: 55%; animation-delay: 6.5s; animation-duration: 8s;  opacity: 0.4; }
+
+/* ============================================
+   ヒーロー：浮遊オーブ
+   ============================================ */
 @keyframes floatA {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.12; }
-  50%       { transform: translate(30px, -40px) scale(1.15); opacity: 0.2; }
+  0%, 100% { transform: translate(0, 0) scale(1);    opacity: 0.12; }
+  50%       { transform: translate(20px, -30px) scale(1.1); opacity: 0.2; }
 }
 @keyframes floatB {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.08; }
-  50%       { transform: translate(-25px, 35px) scale(0.9); opacity: 0.15; }
+  0%, 100% { transform: translate(0, 0) scale(1);    opacity: 0.08; }
+  50%       { transform: translate(-20px, 25px) scale(0.9); opacity: 0.14; }
 }
 @keyframes floatC {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.06; }
-  50%       { transform: translate(20px, 20px) scale(1.1); opacity: 0.12; }
+  0%, 100% { transform: translate(0, 0) scale(1);    opacity: 0.06; }
+  50%       { transform: translate(15px, 15px) scale(1.05); opacity: 0.1; }
 }
-
 .blob-a { animation: floatA 14s ease-in-out infinite; }
 .blob-b { animation: floatB 18s ease-in-out infinite; }
 .blob-c { animation: floatC 22s ease-in-out infinite; }
+
+/* ============================================
+   ヒーロー：背景動画
+   PC: 表示・右寄り
+   スマホ: 非表示（CSSグラデーション代替）
+   ============================================ */
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 65% center;
+  opacity: 0.45;
+  /* スマホでは非表示 */
+  display: none;
+}
+@media (min-width: 640px) {
+  .hero-video { display: block; }
+}
+
+/* ============================================
+   ヒーロー：オーバーレイ
+   PC: ネイビー60% / スマホ: 75%（動画なしでも映える）
+   ============================================ */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(6, 13, 31, 0.85) 0%,
+    rgba(6, 13, 31, 0.75) 50%,
+    rgba(6, 13, 31, 0.55) 100%
+  );
+}
+@media (max-width: 639px) {
+  .hero-overlay {
+    background: rgba(6, 13, 31, 0.78);
+  }
+}
