@@ -51,9 +51,9 @@
   opacity: 0.55;         /* 動画をしっかり見せる */
   z-index: 1;
 }
-/* スマホ: 動画は少し暗く */
+/* スマホ: 動画をしっかり見せる */
 @media (max-width: 639px) {
-  .hero-video { opacity: 0.35; }
+  .hero-video { opacity: 0.50; object-position: 70% center; }
 }
 
 /* 3. オーバーレイ — 動画の上に重ねてテキスト保護 */
@@ -70,8 +70,14 @@
   );
 }
 @media (max-width: 639px) {
+  /* スマホ: 上下より左右に薄いグラデーションで動画を活かす */
   .hero-overlay {
-    background: rgba(2, 8, 16, 0.78);
+    background: linear-gradient(
+      to bottom,
+      rgba(2, 8, 16, 0.72) 0%,
+      rgba(2, 8, 16, 0.62) 50%,
+      rgba(2, 8, 16, 0.70) 100%
+    );
   }
 }
 
@@ -89,16 +95,24 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(96, 165, 250, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(96, 165, 250, 0.07) 1px, transparent 1px);
+    linear-gradient(rgba(96, 165, 250, 0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, 0.10) 1px, transparent 1px);
   background-size: 72px 72px;
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(0,0,0,0.6) 15%,
-    rgba(0,0,0,0.6) 85%,
+    rgba(0,0,0,0.8) 15%,
+    rgba(0,0,0,0.8) 85%,
     transparent 100%
   );
+}
+@media (max-width: 639px) {
+  .hero-grid {
+    background-size: 48px 48px;
+    background-image:
+      linear-gradient(rgba(96, 165, 250, 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(96, 165, 250, 0.12) 1px, transparent 1px);
+  }
 }
 
 /* ---- 流れるデータライン ---- */
@@ -122,9 +136,16 @@
   );
 }
 .data-line-1 { left: 58%; animation: lineFlow 7s linear 0s   infinite; }
-.data-line-2 { left: 68%; animation: lineFlow 9s linear 2.5s infinite; width: 1px; opacity: 0.6; }
+.data-line-2 { left: 68%; animation: lineFlow 9s linear 2.5s infinite; opacity: 0.6; }
 .data-line-3 { left: 76%; animation: lineFlow 11s linear 5s  infinite; opacity: 0.4; }
 .data-line-4 { left: 63%; animation: lineFlow 8s linear 7s   infinite; opacity: 0.5; }
+/* スマホ: 左右に1本ずつ表示 */
+@media (max-width: 639px) {
+  .data-line-1 { left: 75%; }
+  .data-line-2 { left: 88%; opacity: 0.5; }
+  .data-line-3 { left: 60%; opacity: 0.35; }
+  .data-line-4 { display: none; }
+}
 
 /* ---- 浮遊オーブ ---- */
 @keyframes orbFloat {
@@ -195,8 +216,7 @@
   background: rgba(96,165,250,0.12);
 }
 
-/* スマホではUIパネルを非表示 */
+/* スマホではUIパネルを非表示（動画優先） */
 @media (max-width: 639px) {
   .ui-panel { display: none; }
-  .data-line-3, .data-line-4 { display: none; }
 }

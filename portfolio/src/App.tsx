@@ -57,8 +57,8 @@ function SectionLabel({
 function Header() {
   const [open, setOpen] = useState(false)
   const links = [
-    { en: 'About',   ja: '私たちについて', href: '#about' },
-    { en: 'Service', ja: '提供サービス',   href: '#service' },
+    { en: 'About',   ja: '私について', href: '#about' },
+    { en: 'Service', ja: 'できること',   href: '#service' },
     { en: 'Works',   ja: '制作実績',       href: '#works' },
     { en: 'Process', ja: '制作の流れ',     href: '#process' },
     { en: 'Profile', ja: 'プロフィール',   href: '#profile' },
@@ -226,7 +226,7 @@ function About() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
-            <SectionLabel en="About" ja="私たちについて" />
+            <SectionLabel en="About" ja="私について" />
             <h2 className="text-3xl sm:text-4xl font-bold text-navy mb-6 leading-tight">
               AIを活用した<br />業務改善ツール制作
             </h2>
@@ -278,7 +278,7 @@ function Service() {
     <section id="service" className="py-32 bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="mb-16">
-          <SectionLabel en="Service" ja="提供サービス" />
+          <SectionLabel en="Service" ja="できること" />
           <h2 className="text-3xl sm:text-4xl font-bold text-navy">できること</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-gray-200">
