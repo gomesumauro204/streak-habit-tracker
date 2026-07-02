@@ -4,7 +4,7 @@ import { tools } from './data/tools'
 // =============================================
 // サイト設定
 // =============================================
-const SITE_NAME     = '福原｜AI業務サポート Official'
+const SITE_NAME     = '福原＠業務ツール開発'
 const CONTACT_MAILTO = 'mailto:tigers_number1@icloud.com'
 const CONTACT_EMAIL  = 'tigers_number1@icloud.com'
 
