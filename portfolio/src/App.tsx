@@ -64,7 +64,7 @@ function Header() {
     { en: 'Profile', ja: 'プロフィール',   href: '#profile' },
   ]
   return (
-    <header className="fixed top-0 inset-x-0 z-50 bg-white/96 backdrop-blur-sm border-b border-gray-100">
+    <header className="fixed top-0 inset-x-0 z-50 bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
         <a href="#" className="text-sm font-bold tracking-wide text-navy leading-tight">
           {SITE_NAME}
