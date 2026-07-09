@@ -1,0 +1,22 @@
+{
+  "name": "crowdworks-automation",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "run": "tsx src/index.ts",
+    "run:headful": "HEADFUL=1 tsx src/index.ts",
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "dotenv": "^16.4.5",
+    "playwright": "^1.48.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
