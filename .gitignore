@@ -11,5 +11,5 @@ start-frontend.sh
 # crowdworks-automation: 個人情報・実データは追跡しない
 crowdworks-automation/data/*
 !crowdworks-automation/data/.gitkeep
-crowdworks-automation/applicant-template.md
+crowdworks-automation/profile.yaml
 crowdworks-automation/search-conditions.yaml

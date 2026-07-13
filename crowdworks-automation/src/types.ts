@@ -8,6 +8,22 @@ export interface SearchConditionsFile {
   searches: SearchCondition[];
 }
 
+export interface Profile {
+  name: string;
+  title?: string;
+  strengths: string[];
+  portfolio?: {
+    url: string;
+    note?: string;
+  };
+  availability?: {
+    hours?: string;
+    scope?: string;
+  };
+  extraNotes?: string[];
+  sampleApplication?: string;
+}
+
 export interface Job {
   id: string;
   title: string;

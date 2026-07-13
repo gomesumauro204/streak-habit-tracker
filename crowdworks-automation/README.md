@@ -18,7 +18,7 @@ cd crowdworks-automation
 pnpm install
 cp .env.example .env
 cp search-conditions.example.yaml search-conditions.yaml
-cp applicant-template.example.md applicant-template.md
+cp profile.example.yaml profile.yaml
 ```
 
 1. `.env` にクラウドワークスのログイン情報と Anthropic API キーを入力
@@ -26,7 +26,8 @@ cp applicant-template.example.md applicant-template.md
    - デフォルトでAI活用・業務効率化・自動化・Web開発系のおすすめキーワードを設定済み
    - `searchUrl` は各キーワードの簡易URLを入れてあるので、そのまま使うか、
      クラウドワークスで実際に検索した結果のURL（カテゴリ等でさらに絞り込んだもの）に差し替えてください
-3. `applicant-template.md` に、応募文に必ず入れたい内容（強み・ポートフォリオ・稼働条件など）を記入
+3. `profile.yaml` に、名前・強み・ポートフォリオ・稼働条件などを記入
+   - **応募文生成に使われる情報はこの1ファイルだけ**です（詳細は下記「応募者プロフィール」参照）
 
 ## 実行
 
@@ -54,6 +55,25 @@ MVPではスケジューラを内蔵していません。macOSの `launchd` や 
 - クラウドワークス利用規約 第23条12号により、サーバーに過剰な負荷をかける行為は禁止されています。
   検索条件（`searchUrl`）の数を増やすほど1回の実行で発生するアクセス数も増えるため、
   条件数が多い場合は実行頻度を1日1〜2回程度に抑えるなど、バランスを取ってください。
+
+## 応募者プロフィール（profile.yaml）
+
+応募文生成に使われる情報は **`profile.yaml` の1ファイルだけ**です（[src/config.ts](src/config.ts) の
+`loadProfile()` が読み込み、[src/draftGenerator.ts](src/draftGenerator.ts) がAIへの指示文に埋め込みます）。
+
+- コードを触らずに、このファイルを編集するだけで**以後生成されるすべての応募文に即反映**されます
+- `name`（名前）・`strengths`（強み、1件以上）は必須項目です。足りないと実行時にエラーで教えてくれます
+- 名前・肩書き・稼働条件などが変わったら、その都度このファイルだけ書き換えればOKです
+
+| 項目 | 必須 | 内容 |
+|---|---|---|
+| `name` | ○ | 応募文の署名に使う名前 |
+| `strengths` | ○ | 強み・実績のリスト |
+| `title` | - | 肩書き・キャッチコピー |
+| `portfolio.url` / `portfolio.note` | - | ポートフォリオURLと説明 |
+| `availability.hours` / `availability.scope` | - | 稼働時間・対応範囲 |
+| `extraNotes` | - | その他アピールしたいこと(リスト) |
+| `sampleApplication` | - | 良いと思った応募文サンプル(文体の参考用) |
 
 ## 検索条件（search-conditions.yaml）の増やし方
 

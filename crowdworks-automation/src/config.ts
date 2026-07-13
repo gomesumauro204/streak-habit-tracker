@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import "dotenv/config";
 import { load as loadYaml } from "js-yaml";
-import type { SearchCondition, SearchConditionsFile } from "./types.js";
+import type { Profile, SearchCondition, SearchConditionsFile } from "./types.js";
 
 const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -75,13 +75,39 @@ export function loadSearchConditions(): SearchConditionsFile {
   return validateSearchConditions(data, path);
 }
 
-export function loadApplicantTemplate(): string {
-  const path = join(rootDir, "applicant-template.md");
+function validateProfile(data: unknown, path: string): Profile {
+  if (typeof data !== "object" || data === null) {
+    throw new Error(`${path} の形式が不正です。`);
+  }
+  const p = data as Partial<Profile>;
+  if (!p.name || typeof p.name !== "string") {
+    throw new Error(`${path} に "name"(文字列)がありません。`);
+  }
+  if (!Array.isArray(p.strengths) || p.strengths.length === 0) {
+    throw new Error(`${path} の "strengths" は1件以上のリストにしてください。`);
+  }
+  return data as Profile;
+}
+
+export function loadProfile(): Profile {
+  const path = join(rootDir, "profile.yaml");
+  let raw: string;
   try {
-    return readFileSync(path, "utf-8");
+    raw = readFileSync(path, "utf-8");
   } catch {
     throw new Error(
-      `applicant-template.md が見つかりません。${path} に応募定型文の材料を書いてください。`
+      `profile.yaml が見つかりません。profile.example.yaml をコピーして ${path} を作成してください。`
     );
   }
+
+  let data: unknown;
+  try {
+    data = loadYaml(raw);
+  } catch (err) {
+    throw new Error(
+      `${path} のYAML構文にエラーがあります。インデントや ":" の位置を見直してください。\n詳細: ${(err as Error).message}`
+    );
+  }
+
+  return validateProfile(data, path);
 }
