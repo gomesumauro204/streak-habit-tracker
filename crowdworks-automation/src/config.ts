@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import "dotenv/config";
-import type { SearchConditionsFile } from "./types.js";
+import { load as loadYaml } from "js-yaml";
+import type { SearchCondition, SearchConditionsFile } from "./types.js";
 
 const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -25,16 +26,53 @@ export const config = {
   dataDir: join(rootDir, "data"),
 };
 
+function validateSearchConditions(data: unknown, path: string): SearchConditionsFile {
+  if (typeof data !== "object" || data === null || !("searches" in data)) {
+    throw new Error(`${path} の形式が不正です。トップレベルに "searches:" のリストが必要です。`);
+  }
+  const searches = (data as { searches: unknown }).searches;
+  if (!Array.isArray(searches) || searches.length === 0) {
+    throw new Error(`${path} の "searches" は1件以上のリストにしてください。`);
+  }
+  searches.forEach((s, i) => {
+    if (typeof s !== "object" || s === null) {
+      throw new Error(`${path} の searches[${i}] がオブジェクトではありません。`);
+    }
+    const entry = s as Partial<SearchCondition>;
+    if (!entry.name || typeof entry.name !== "string") {
+      throw new Error(`${path} の searches[${i}] に "name"(文字列)がありません。`);
+    }
+    if (!entry.searchUrl || typeof entry.searchUrl !== "string") {
+      throw new Error(`${path} の searches[${i}](${entry.name}) に "searchUrl"(文字列)がありません。`);
+    }
+    if (entry.minBudget !== undefined && typeof entry.minBudget !== "number") {
+      throw new Error(`${path} の searches[${i}](${entry.name}) の "minBudget" は数値にしてください。`);
+    }
+  });
+  return data as SearchConditionsFile;
+}
+
 export function loadSearchConditions(): SearchConditionsFile {
-  const path = join(rootDir, "search-conditions.json");
+  const path = join(rootDir, "search-conditions.yaml");
+  let raw: string;
   try {
-    const raw = readFileSync(path, "utf-8");
-    return JSON.parse(raw) as SearchConditionsFile;
+    raw = readFileSync(path, "utf-8");
   } catch {
     throw new Error(
-      `search-conditions.json が見つかりません。search-conditions.example.json をコピーして ${path} を作成してください。`
+      `search-conditions.yaml が見つかりません。search-conditions.example.yaml をコピーして ${path} を作成してください。`
     );
   }
+
+  let data: unknown;
+  try {
+    data = loadYaml(raw);
+  } catch (err) {
+    throw new Error(
+      `${path} のYAML構文にエラーがあります。インデントや ":" の位置を見直してください。\n詳細: ${(err as Error).message}`
+    );
+  }
+
+  return validateSearchConditions(data, path);
 }
 
 export function loadApplicantTemplate(): string {

@@ -17,13 +17,15 @@
 cd crowdworks-automation
 pnpm install
 cp .env.example .env
-cp search-conditions.example.json search-conditions.json
+cp search-conditions.example.yaml search-conditions.yaml
 cp applicant-template.example.md applicant-template.md
 ```
 
 1. `.env` にクラウドワークスのログイン情報と Anthropic API キーを入力
-2. `search-conditions.json` に、クラウドワークスで実際に検索条件を設定した後の**検索結果ページURL**を貼り付け
-   （例: キーワードやカテゴリで絞り込んだ状態のURLをブラウザからコピー）
+2. `search-conditions.yaml` を編集して検索条件を管理（ジャンルごとに複数登録可能。書き方はファイル冒頭のコメント参照）
+   - デフォルトでAI活用・業務効率化・自動化・Web開発系のおすすめキーワードを設定済み
+   - `searchUrl` は各キーワードの簡易URLを入れてあるので、そのまま使うか、
+     クラウドワークスで実際に検索した結果のURL（カテゴリ等でさらに絞り込んだもの）に差し替えてください
 3. `applicant-template.md` に、応募文に必ず入れたい内容（強み・ポートフォリオ・稼働条件など）を記入
 
 ## 実行
@@ -50,4 +52,22 @@ MVPではスケジューラを内蔵していません。macOSの `launchd` や 
 - 予算フィルタ（`minBudget`）は案件ページのテキストから数値を推定しているだけなので、
   誤って除外/通過するケースがあります。最終判断はレポートを見て自分で行ってください。
 - クラウドワークス利用規約 第23条12号により、サーバーに過剰な負荷をかける行為は禁止されています。
-  検索条件（`searchUrl`）の数や実行頻度を過度に増やさないでください（1日数回・数件の検索条件を想定）。
+  検索条件（`searchUrl`）の数を増やすほど1回の実行で発生するアクセス数も増えるため、
+  条件数が多い場合は実行頻度を1日1〜2回程度に抑えるなど、バランスを取ってください。
+
+## 検索条件（search-conditions.yaml）の増やし方
+
+`searches:` の下にブロックを追加するだけです。
+
+```yaml
+  - name: "新しいジャンル名"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=キーワード"
+    minBudget: 30000
+```
+
+- `name` は自由な管理用ラベル（レポートに表示されます）
+- `searchUrl` はクラウドワークスで検索した結果ページのURL
+- YAMLの構文（インデント・コロンの後の半角スペース）が崩れるとエラーになるので、
+  既存のブロックをコピーして書き換えるのが安全です
+- 起動時（`pnpm run` / `pnpm run:headful`）に形式チェックが入るので、
+  記述ミスがあれば実行前にエラーメッセージで教えてくれます

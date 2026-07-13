@@ -1,0 +1,80 @@
+# =========================================================
+# クラウドワークス 新着案件 検索条件設定
+# =========================================================
+#
+# このファイルをコピーして search-conditions.yaml を作成してください。
+#
+# [各項目の意味]
+#   name       : 管理用の名前。レポート上に表示されます(自由に変更可)
+#   searchUrl  : クラウドワークスの検索結果ページURL
+#   minBudget  : この金額(円)未満の案件は除外します(省略可)
+#
+# [searchUrlの決め方]
+#   1. クラウドワークスにログインした状態で案件検索を開く
+#   2. キーワード・カテゴリ・契約形態などお好みで絞り込む
+#   3. 表示された検索結果ページのURLをコピーして searchUrl に貼り付け
+#   ※ 下記はキーワードのみで組み立てた簡易URLです。カテゴリ等でさらに
+#     絞り込みたい場合は、ブラウザ上で設定した実際のURLに差し替えてください。
+#
+# [追加・削除のやり方]
+#   searches: の下に "- name: ... / searchUrl: ... / minBudget: ..." の
+#   ブロックを増減させるだけでOKです。ジャンルの塊ごとに # コメントで
+#   見出しを付けておくと、後からメンテしやすくなります。
+#
+# [おすすめキーワードについて]
+#   「AIを活用した業務効率化ツール・Webツール開発・自動化案件」を狙う
+#   前提で、下記に候補キーワードをあらかじめ設定しています。
+#   実際にクラウドワークスで検索してヒット件数や案件の質を見ながら、
+#   キーワードの追加・削除・言い換え(例:「効率化」⇔「省力化」)を
+#   調整していくのがおすすめです。取りこぼしを減らすには、同じ意図でも
+#   表記ゆれ違いのキーワードを複数用意するのが効果的です。
+
+searches:
+  # --- AI活用・業務効率化系 ---
+  - name: "AI活用 業務効率化"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=AI%E6%A5%AD%E5%8B%99%E5%8A%B9%E7%8E%87%E5%8C%96"
+    minBudget: 30000
+
+  - name: "業務自動化"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E6%A5%AD%E5%8B%99%E8%87%AA%E5%8B%95%E5%8C%96"
+    minBudget: 30000
+
+  - name: "RPA開発"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=RPA"
+    minBudget: 30000
+
+  # --- 生成AI関連(ChatGPT/Claude等) ---
+  - name: "生成AI開発"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E7%94%9F%E6%88%90AI%E9%96%8B%E7%99%BA"
+    minBudget: 30000
+
+  - name: "ChatGPT活用開発"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=ChatGPT"
+    minBudget: 30000
+
+  - name: "Claude API活用"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Claude%20API"
+    minBudget: 30000
+
+  # --- Webツール・システム開発系 ---
+  - name: "Webアプリ開発"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Web%E3%82%A2%E3%83%97%E3%83%AA%E9%96%8B%E7%99%BA"
+    minBudget: 50000
+
+  - name: "社内ツール開発"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E7%A4%BE%E5%86%85%E3%83%84%E3%83%BC%E3%83%AB%E9%96%8B%E7%99%BA"
+    minBudget: 30000
+
+  - name: "業務システム開発"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E6%A5%AD%E5%8B%99%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E9%96%8B%E7%99%BA"
+    minBudget: 30000
+
+  # --- スクレイピング・データ処理系(自動化案件によく絡む) ---
+  - name: "スクレイピング開発"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E3%82%B9%E3%82%AF%E3%83%AC%E3%82%A4%E3%83%94%E3%83%B3%E3%82%B0"
+    minBudget: 30000
+
+  # --- ここに新しいジャンルを追加していけます ---
+  # - name: "新しいジャンル名"
+  #   searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=..."
+  #   minBudget: 30000

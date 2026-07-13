@@ -12,4 +12,4 @@ start-frontend.sh
 crowdworks-automation/data/*
 !crowdworks-automation/data/.gitkeep
 crowdworks-automation/applicant-template.md
-crowdworks-automation/search-conditions.json
+crowdworks-automation/search-conditions.yaml

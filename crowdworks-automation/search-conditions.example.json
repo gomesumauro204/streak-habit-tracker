@@ -1,9 +1,0 @@
-{
-  "searches": [
-    {
-      "name": "例: Web制作 新着",
-      "searchUrl": "https://crowdworks.jp/public/jobs/search?order=new&keyword=Web制作",
-      "minBudget": 30000
-    }
-  ]
-}
