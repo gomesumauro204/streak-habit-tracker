@@ -462,7 +462,19 @@ function Contact() {
           メールで相談する
           <IconArrow />
         </a>
-        <p className="text-gray-600 text-xs mt-8 tracking-wider">{CONTACT_EMAIL}</p>
+
+        {/* メールアドレスを大きく表示してコピーしやすく */}
+        <div className="mt-10 border border-white/10 px-8 py-5 inline-block">
+          <p className="text-gray-500 text-xs mb-2 tracking-widest uppercase">Mail</p>
+          <a href={CONTACT_MAILTO}
+            className="text-white text-base sm:text-lg font-semibold tracking-wide
+              hover:text-blue-300 transition-colors">
+            {CONTACT_EMAIL}
+          </a>
+        </div>
+        <p className="text-gray-600 text-xs mt-4">
+          ※ メールアプリが開かない場合は、上記アドレスをコピーしてご利用ください
+        </p>
       </div>
     </section>
   )
