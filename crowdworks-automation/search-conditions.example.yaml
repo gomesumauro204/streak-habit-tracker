@@ -15,9 +15,13 @@
 #   minHourlyRate   : [時間単価のみ] 最低時給(円)。この時給未満の案件は除外
 #                      ※ minBudget と minHourlyRate はどちらか片方だけ設定してください
 #                        (fixedなのにminHourlyRateを書く、のような組み合わせはエラーになります)
-#   excludeKeywords : タイトル・案件情報にこの語が含まれていたら除外(リスト、省略可)
-#   newOnly         : true にすると、一覧で「新着」表示がある案件のみ対象(省略可、既定false)
-#   openOnly        : true にすると、募集終了・受付終了の案件を除外(省略可、既定false)
+#   newOnly         : true にすると、一覧で「新着」表示がある案件のみ対象(既定false)
+#   openOnly        : true にすると、募集終了・受付終了の案件を除外(既定false)
+#
+#   ※ excludeKeywords(除外キーワード)はこの段階では使いません。
+#     検索条件はできるだけ広く案件を拾うことを優先し、実際に応募すべきかの
+#     絞り込みは job-criteria.yaml の基準にもとづき Claude が本文まで読んで
+#     判定します(詳細はプロジェクトの README「応募対象判定」を参照)。
 #
 # -----------------------------------------------------------
 # [searchUrlの決め方(必須の運用ルール)]
@@ -66,7 +70,6 @@ searches:
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=AI%E6%A5%AD%E5%8B%99%E5%8A%B9%E7%8E%87%E5%8C%96"
     contractType: fixed
     minBudget: 30000
-    excludeKeywords: ["データ入力", "アンケート"]
     newOnly: false
     openOnly: true
 
@@ -74,19 +77,21 @@ searches:
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=AI%E6%A5%AD%E5%8B%99%E5%8A%B9%E7%8E%87%E5%8C%96"
     contractType: hourly
     minHourlyRate: 2000
-    excludeKeywords: ["データ入力", "アンケート"]
+    newOnly: false
     openOnly: true
 
   - name: "業務自動化(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E6%A5%AD%E5%8B%99%E8%87%AA%E5%8B%95%E5%8C%96"
     contractType: fixed
     minBudget: 30000
+    newOnly: false
     openOnly: true
 
   - name: "RPA開発(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=RPA"
     contractType: fixed
     minBudget: 30000
+    newOnly: false
     openOnly: true
 
   # =========================================================
@@ -96,18 +101,21 @@ searches:
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E7%94%9F%E6%88%90AI%E9%96%8B%E7%99%BA"
     contractType: fixed
     minBudget: 30000
+    newOnly: false
     openOnly: true
 
   - name: "ChatGPT活用開発(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=ChatGPT"
     contractType: fixed
     minBudget: 30000
+    newOnly: false
     openOnly: true
 
   - name: "Claude API活用(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Claude%20API"
     contractType: fixed
     minBudget: 30000
+    newOnly: false
     openOnly: true
 
   # =========================================================
@@ -117,25 +125,28 @@ searches:
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Web%E3%82%A2%E3%83%97%E3%83%AA%E9%96%8B%E7%99%BA"
     contractType: fixed
     minBudget: 50000
-    excludeKeywords: ["コーディングのみ", "LP制作のみ"]
+    newOnly: false
     openOnly: true
 
   - name: "Webアプリ開発(時間単価)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Web%E3%82%A2%E3%83%97%E3%83%AA%E9%96%8B%E7%99%BA"
     contractType: hourly
     minHourlyRate: 2500
+    newOnly: false
     openOnly: true
 
   - name: "社内ツール開発(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E7%A4%BE%E5%86%85%E3%83%84%E3%83%BC%E3%83%AB%E9%96%8B%E7%99%BA"
     contractType: fixed
     minBudget: 30000
+    newOnly: false
     openOnly: true
 
   - name: "業務システム開発(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E6%A5%AD%E5%8B%99%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E9%96%8B%E7%99%BA"
     contractType: fixed
     minBudget: 30000
+    newOnly: false
     openOnly: true
 
   # =========================================================
@@ -146,12 +157,14 @@ searches:
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Python"
     contractType: fixed
     minBudget: 30000
+    newOnly: false
     openOnly: true
 
   - name: "Python開発(時間単価)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Python"
     contractType: hourly
     minHourlyRate: 2000
+    newOnly: false
     openOnly: true
 
   # =========================================================
@@ -161,6 +174,7 @@ searches:
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E3%82%B9%E3%82%AF%E3%83%AC%E3%82%A4%E3%83%94%E3%83%B3%E3%82%B0"
     contractType: fixed
     minBudget: 30000
+    newOnly: false
     openOnly: true
 
   # =========================================================
@@ -170,7 +184,6 @@ searches:
   #   searchUrl: "（実際に検索・絞り込みを行った結果ページのURL）"
   #   contractType: fixed
   #   minBudget: 30000
-  #   excludeKeywords: ["除外したい語"]
   #   newOnly: false
   #   openOnly: true
   #
@@ -178,4 +191,5 @@ searches:
   #   searchUrl: "（実際に検索・絞り込みを行った結果ページのURL）"
   #   contractType: hourly
   #   minHourlyRate: 2000
+  #   newOnly: false
   #   openOnly: true
