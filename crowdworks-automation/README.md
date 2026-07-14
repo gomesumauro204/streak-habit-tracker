@@ -28,30 +28,70 @@
 6. 応募対象と判定された案件だけ、あなたのプロフィールをもとにAIが応募文ドラフトを作成
 7. `data/reports/` にMarkdownレポートを出力（採用案件のドラフトと、除外した案件・理由の一覧）
 
-## セットアップ
+## セットアップ(初回)
 
 ```bash
 cd crowdworks-automation
 pnpm install
 cp .env.example .env
-cp search-conditions.example.yaml search-conditions.yaml
-cp profile.example.yaml profile.yaml
-cp job-criteria.example.yaml job-criteria.yaml
+pnpm run config:update
 ```
 
-1. `.env` にクラウドワークスのログイン情報と Anthropic API キーを入力
-2. `search-conditions.yaml` を編集して検索条件を管理（同じジャンルでも契約方式ごとに条件を分けて複数登録可能。
-   書き方はファイル冒頭のコメント参照）
-   - デフォルトでAI活用・業務効率化・自動化・Web開発系のおすすめジャンルを、
-     固定報酬/時間単価それぞれで用意済み
-   - `searchUrl` は初期状態ではキーワードのみの簡易URL（プレースホルダー）です
-   - **運用開始前に、各条件ごとにクラウドワークスで実際に検索・絞り込みを行い、
-     その検索結果ページのURLに差し替えてください**（keyword=だけの簡易URLは使わない）
-3. `job-criteria.yaml` を編集して、応募対象の判定基準を管理
-   - デフォルトでAI活用・自動化・開発系を歓迎、データ入力・ライティング等を除外する基準を用意済み
-   - 詳細は下記「応募対象判定（job-criteria.yaml）」参照
-4. `profile.yaml` に、名前・強み・ポートフォリオ・稼働条件などを記入
-   - **応募文生成に使われる情報はこの1ファイルだけ**です（詳細は下記「応募者プロフィール」参照）
+- `.env` にクラウドワークスのログイン情報と Anthropic API キーを入力してください
+- `pnpm run config:update` を実行すると、`*.example.yaml` をもとに
+  `profile.yaml` / `search-conditions.yaml` / `job-criteria.yaml` が
+  まだ無ければ自動作成されます(詳細は下記「設定ファイルの管理の仕組み」参照)
+- その後、以下を編集してください
+  1. `search-conditions.yaml` : 検索条件（`searchUrl` を実際の検索結果URLに差し替え。詳細は後述）
+  2. `job-criteria.yaml` : 応募対象の判定基準（詳細は下記「応募対象判定」参照）
+  3. `profile.yaml` : 名前・強み・ポートフォリオ・稼働条件など（詳細は下記「応募者プロフィール」参照）
+
+## 設定ファイルの管理の仕組み
+
+このツールの設定ファイルは、すべて **「`○○.example.yaml`(テンプレート) + `○○.yaml`(あなたの実際の設定)」**
+のペアで管理されています。ファイル名を個別にハードコードした仕組みではなく、
+**`*.example.yaml` を置くだけで自動的に管理対象として認識される**汎用の仕組みです
+([src/configSync.ts](src/configSync.ts))。新しい設定ファイルを増やしたくなったら、
+コードは一切変更せず `foo.example.yaml` を置くだけで、`config:check` / `config:update` の対象になります。
+
+### ルール
+
+- **実際の `.yaml` が存在する場合は絶対に上書きしません。** あなたが入力した値・URL・APIキー・
+  応募文などは、明示的に削除しない限り保持されます
+- 実際の `.yaml` が**存在しない場合だけ**、対応する `.example.yaml` から自動生成されます
+- `.example.yaml` 側に新しい項目が追加された場合(例: バージョンアップで `newOption:` が追加された等)、
+  実際の `.yaml` 側には**不足している項目だけ**を追記します。既存の値・配列の中身は一切変更しません
+- 更新前には必ずバックアップ(`○○.yaml.backup`)を作成します
+- 実行結果には「追加された項目」「保持した項目」「手動確認が必要な項目」を表示します
+- 設定ファイルの中身(APIキーなど機密情報を含む可能性がある値)はログに出力しません。表示されるのは
+  項目名(キーのパス)のみです
+
+### コマンド
+
+```bash
+# example との差分を確認するだけ(何も書き換えません)
+pnpm run config:check
+
+# バックアップを作成した上で、不足項目だけを安全に追記します
+pnpm run config:update
+```
+
+`pnpm run` / `pnpm run:headful` の実行時にも、起動時に自動で差分チェックが走ります。
+ただし自動で書き換えるのは「ファイルがまだ存在しない場合の新規作成」だけで、
+既存ファイルへの追記は行いません(不足があれば警告を表示するだけです)。
+実際に追記したいときは `pnpm run config:update` を明示的に実行してください。
+
+### 新しい設定ファイルを追加する方法
+
+1. `crowdworks-automation/` 直下に `foo.example.yaml` を作成し、テンプレートとなる項目を書く
+2. `pnpm run config:check` を実行すると、`foo.yaml` が未作成であることが表示されます
+3. `pnpm run config:update` を実行すると、`foo.yaml` が自動作成されます
+4. 以降、`foo.example.yaml` に項目を追加したら、`pnpm run config:update` で
+   `foo.yaml` 側にも不足分だけが安全に追記されます
+
+コード側(`src/config.ts` など)でこの新しい設定ファイルを実際に読み込んで使うには、
+別途 `loadXxx()` のような読み込み関数を追加する必要がありますが、
+**ファイルの生成・同期・バックアップの仕組み自体はコード変更不要**です。
 
 ## 実行
 

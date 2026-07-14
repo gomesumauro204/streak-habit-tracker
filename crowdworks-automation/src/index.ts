@@ -5,9 +5,35 @@ import { generateDraft } from "./draftGenerator.js";
 import { screenJob } from "./screening.js";
 import { writeReport } from "./report.js";
 import { matchesSearchCondition } from "./filters.js";
+import { findManagedConfigs, checkConfig, syncConfig } from "./configSync.js";
 import type { Job, JobDraft, ScreenedJob } from "./types.js";
 
+/**
+ * 起動時に設定ファイル(*.yaml)の状態を確認する。
+ * - まだ存在しないファイルは example から自動作成する(失うものが無いため安全)
+ * - 既存ファイルに不足項目がある場合は警告のみ行い、ファイルは書き換えない
+ *   (実際にマージするには `pnpm run config:update` を明示的に実行する)
+ */
+function ensureConfigsUpToDate() {
+  for (const cfg of findManagedConfigs()) {
+    const result = checkConfig(cfg);
+    if (result.isNew) {
+      syncConfig(cfg, { write: true });
+      console.log(`[config] ${cfg.name}.yaml が無かったため ${cfg.name}.example.yaml から作成しました。内容を編集してください。`);
+      continue;
+    }
+    if (result.missing.length > 0) {
+      console.warn(
+        `[config] ${cfg.name}.yaml に不足項目があります: ${result.missing.join(", ")}`
+      );
+      console.warn("[config] 反映するには: pnpm run config:update");
+    }
+  }
+}
+
 async function main() {
+  ensureConfigsUpToDate();
+
   const { searches } = loadSearchConditions();
   const seenJobIds = loadSeenJobIds();
 

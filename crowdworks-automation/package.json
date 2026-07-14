@@ -7,13 +7,16 @@
     "build": "tsc",
     "run": "tsx src/index.ts",
     "run:headful": "HEADFUL=1 tsx src/index.ts",
+    "config:check": "tsx src/cliConfig.ts check",
+    "config:update": "tsx src/cliConfig.ts update",
     "postinstall": "playwright install chromium"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
     "dotenv": "^16.4.5",
     "js-yaml": "^4.1.0",
-    "playwright": "^1.48.2"
+    "playwright": "^1.48.2",
+    "yaml": "^2.6.1"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
