@@ -13,3 +13,4 @@ crowdworks-automation/data/*
 !crowdworks-automation/data/.gitkeep
 crowdworks-automation/profile.yaml
 crowdworks-automation/search-conditions.yaml
+crowdworks-automation/job-criteria.yaml

@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import "dotenv/config";
 import { load as loadYaml } from "js-yaml";
-import type { Profile, SearchCondition, SearchConditionsFile } from "./types.js";
+import type { JobCriteria, Profile, SearchCondition, SearchConditionsFile } from "./types.js";
 
 const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -25,6 +25,24 @@ export const config = {
   rootDir,
   dataDir: join(rootDir, "data"),
 };
+
+function readYamlFile(filename: string, exampleFilename: string): unknown {
+  const path = join(rootDir, filename);
+  let raw: string;
+  try {
+    raw = readFileSync(path, "utf-8");
+  } catch {
+    throw new Error(`${filename} が見つかりません。${exampleFilename} をコピーして ${path} を作成してください。`);
+  }
+
+  try {
+    return loadYaml(raw);
+  } catch (err) {
+    throw new Error(
+      `${path} のYAML構文にエラーがあります。インデントや ":" の位置を見直してください。\n詳細: ${(err as Error).message}`
+    );
+  }
+}
 
 function validateSearchConditions(data: unknown, path: string): SearchConditionsFile {
   if (typeof data !== "object" || data === null || !("searches" in data)) {
@@ -90,26 +108,9 @@ function validateSearchConditions(data: unknown, path: string): SearchConditions
 }
 
 export function loadSearchConditions(): SearchConditionsFile {
-  const path = join(rootDir, "search-conditions.yaml");
-  let raw: string;
-  try {
-    raw = readFileSync(path, "utf-8");
-  } catch {
-    throw new Error(
-      `search-conditions.yaml が見つかりません。search-conditions.example.yaml をコピーして ${path} を作成してください。`
-    );
-  }
-
-  let data: unknown;
-  try {
-    data = loadYaml(raw);
-  } catch (err) {
-    throw new Error(
-      `${path} のYAML構文にエラーがあります。インデントや ":" の位置を見直してください。\n詳細: ${(err as Error).message}`
-    );
-  }
-
-  return validateSearchConditions(data, path);
+  const filename = "search-conditions.yaml";
+  const data = readYamlFile(filename, "search-conditions.example.yaml");
+  return validateSearchConditions(data, join(rootDir, filename));
 }
 
 function validateProfile(data: unknown, path: string): Profile {
@@ -127,24 +128,36 @@ function validateProfile(data: unknown, path: string): Profile {
 }
 
 export function loadProfile(): Profile {
-  const path = join(rootDir, "profile.yaml");
-  let raw: string;
-  try {
-    raw = readFileSync(path, "utf-8");
-  } catch {
-    throw new Error(
-      `profile.yaml が見つかりません。profile.example.yaml をコピーして ${path} を作成してください。`
-    );
-  }
+  const filename = "profile.yaml";
+  const data = readYamlFile(filename, "profile.example.yaml");
+  return validateProfile(data, join(rootDir, filename));
+}
 
-  let data: unknown;
-  try {
-    data = loadYaml(raw);
-  } catch (err) {
-    throw new Error(
-      `${path} のYAML構文にエラーがあります。インデントや ":" の位置を見直してください。\n詳細: ${(err as Error).message}`
-    );
+function validateJobCriteria(data: unknown, path: string): JobCriteria {
+  if (typeof data !== "object" || data === null) {
+    throw new Error(`${path} の形式が不正です。`);
   }
+  const c = data as Partial<JobCriteria>;
+  if (
+    !Array.isArray(c.acceptKeywords) ||
+    c.acceptKeywords.some((k) => typeof k !== "string")
+  ) {
+    throw new Error(`${path} の "acceptKeywords" は文字列のリストにしてください(空リスト可)。`);
+  }
+  if (
+    !Array.isArray(c.rejectKeywords) ||
+    c.rejectKeywords.some((k) => typeof k !== "string")
+  ) {
+    throw new Error(`${path} の "rejectKeywords" は文字列のリストにしてください(空リスト可)。`);
+  }
+  if (c.description !== undefined && typeof c.description !== "string") {
+    throw new Error(`${path} の "description" は文字列にしてください。`);
+  }
+  return data as JobCriteria;
+}
 
-  return validateProfile(data, path);
+export function loadJobCriteria(): JobCriteria {
+  const filename = "job-criteria.yaml";
+  const data = readYamlFile(filename, "job-criteria.example.yaml");
+  return validateJobCriteria(data, join(rootDir, filename));
 }

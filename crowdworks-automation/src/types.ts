@@ -53,3 +53,21 @@ export interface JobWithDetail extends Job {
 export interface JobDraft extends JobWithDetail {
   draft: string;
 }
+
+export interface JobCriteria {
+  /** 歓迎したい案件の特徴(参考情報。これに一致しなくても内容次第で採用され得る) */
+  acceptKeywords: string[];
+  /** 避けたい案件の特徴(参考情報。これに一致しても内容次第で採用され得る) */
+  rejectKeywords: string[];
+  /** キーワードだけでは表現しづらい判定方針の補足(自由記述、省略可) */
+  description?: string;
+}
+
+export interface ScreeningResult {
+  accepted: boolean;
+  reason: string;
+}
+
+export interface ScreenedJob extends JobWithDetail {
+  screening: ScreeningResult;
+}
