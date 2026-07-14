@@ -27,7 +27,7 @@ export function writeReport(drafts: JobDraft[]): string {
 
 - 検索条件: ${d.searchName}
 - URL: ${d.url}
-- 予算情報(抜粋): ${d.budgetText.slice(0, 200)}
+- 案件情報(抜粋): ${d.contextText.slice(0, 200)}
 
 ### AIドラフト応募文(要確認・修正のうえ送信してください)
 

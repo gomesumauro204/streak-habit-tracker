@@ -4,81 +4,178 @@
 #
 # このファイルをコピーして search-conditions.yaml を作成してください。
 #
+# -----------------------------------------------------------
 # [各項目の意味]
-#   name       : 管理用の名前。レポート上に表示されます(自由に変更可)
-#   searchUrl  : クラウドワークスの検索結果ページURL
-#   minBudget  : この金額(円)未満の案件は除外します(省略可)
+# -----------------------------------------------------------
+#   name            : 管理用の名前。レポート上に表示されます(自由に変更可)
+#   searchUrl       : クラウドワークスの検索結果ページURL(下記「searchUrlの決め方」参照)
+#   contractType    : 契約方式。 "fixed"(固定報酬) か "hourly"(時間単価)
+#                      省略した場合は "fixed" 扱いになります
+#   minBudget       : [固定報酬のみ] 最低契約金額(円)。この金額未満の案件は除外
+#   minHourlyRate   : [時間単価のみ] 最低時給(円)。この時給未満の案件は除外
+#                      ※ minBudget と minHourlyRate はどちらか片方だけ設定してください
+#                        (fixedなのにminHourlyRateを書く、のような組み合わせはエラーになります)
+#   excludeKeywords : タイトル・案件情報にこの語が含まれていたら除外(リスト、省略可)
+#   newOnly         : true にすると、一覧で「新着」表示がある案件のみ対象(省略可、既定false)
+#   openOnly        : true にすると、募集終了・受付終了の案件を除外(省略可、既定false)
 #
+# -----------------------------------------------------------
 # [searchUrlの決め方(必須の運用ルール)]
+# -----------------------------------------------------------
 #   1. クラウドワークスにログインした状態で案件検索を開く
-#   2. キーワード・カテゴリ・契約形態などで実際に絞り込みを行う
+#   2. キーワード・カテゴリ・契約方式(固定報酬/時間単価)などで実際に絞り込みを行う
 #   3. 検索結果が表示された状態のページURLをそのままコピーして searchUrl に貼り付け
 #   → keyword= だけの簡易URLではなく、必ずブラウザで実際に検索・絞り込みを
-#     行った後の検索結果ページURLを設定してください(Safariで再現確認済みの方式)。
+#     行った後の検索結果ページURLを設定してください。
+#   ※ searchUrl 側で契約方式を絞り込んでいても、こちらの contractType は
+#     予算判定(minBudget/minHourlyRate のどちらを使うか)のために別途必要です。
+#     searchUrlの契約方式と contractType は必ず一致させてください。
 #
-#   ⚠ 下記の各エントリは初期セットアップ時点でのキーワード簡易URLの
-#     プレースホルダーです。運用開始前に、それぞれ実際にcrowdworks.jpで
-#     検索・絞り込みを行った上でのURLに差し替えてください。
+# -----------------------------------------------------------
+# [同じジャンルを複数条件に分けたいとき]
+# -----------------------------------------------------------
+#   「業務効率化(固定報酬)」「業務効率化(時間単価)」のように、
+#   name を変えて2つのブロックを用意すればOKです(下記の例を参照)。
 #
+# -----------------------------------------------------------
 # [追加・削除のやり方]
-#   searches: の下に "- name: ... / searchUrl: ... / minBudget: ..." の
-#   ブロックを増減させるだけでOKです。ジャンルの塊ごとに # コメントで
-#   見出しを付けておくと、後からメンテしやすくなります。
+# -----------------------------------------------------------
+#   searches: の下に、ブロックを増減させるだけでOKです。
+#   ジャンルの塊ごとに # コメントで見出しを付けておくと、後からメンテしやすくなります。
+#   起動時(pnpm run / pnpm run:headful)に形式チェックが入るので、
+#   記述ミスがあれば実行前にエラーメッセージで教えてくれます。
 #
+# -----------------------------------------------------------
 # [おすすめキーワードについて]
+# -----------------------------------------------------------
 #   「AIを活用した業務効率化ツール・Webツール開発・自動化案件」を狙う
-#   前提で、下記に候補キーワードをあらかじめ設定しています。
-#   実際にクラウドワークスで検索してヒット件数や案件の質を見ながら、
-#   キーワードの追加・削除・言い換え(例:「効率化」⇔「省力化」)を
+#   前提でジャンルを用意しています。実際に検索してヒット件数や案件の質を
+#   見ながら、キーワードの追加・削除・言い換え(例:「効率化」⇔「省力化」)を
 #   調整していくのがおすすめです。取りこぼしを減らすには、同じ意図でも
 #   表記ゆれ違いのキーワードを複数用意するのが効果的です。
+#
+#   ⚠ 下記の searchUrl はいずれも「実際に検索していない」プレースホルダーです。
+#     運用開始前に、それぞれ対応するジャンル・契約方式でcrowdworks.jpで
+#     検索・絞り込みを行った上でのURLに差し替えてください。
 
 searches:
-  # --- AI活用・業務効率化系 ---
-  - name: "AI活用 業務効率化"
+  # =========================================================
+  # AI活用・業務効率化系
+  # =========================================================
+  - name: "業務効率化(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=AI%E6%A5%AD%E5%8B%99%E5%8A%B9%E7%8E%87%E5%8C%96"
+    contractType: fixed
     minBudget: 30000
+    excludeKeywords: ["データ入力", "アンケート"]
+    newOnly: false
+    openOnly: true
 
-  - name: "業務自動化"
+  - name: "業務効率化(時間単価)"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=AI%E6%A5%AD%E5%8B%99%E5%8A%B9%E7%8E%87%E5%8C%96"
+    contractType: hourly
+    minHourlyRate: 2000
+    excludeKeywords: ["データ入力", "アンケート"]
+    openOnly: true
+
+  - name: "業務自動化(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E6%A5%AD%E5%8B%99%E8%87%AA%E5%8B%95%E5%8C%96"
+    contractType: fixed
     minBudget: 30000
+    openOnly: true
 
-  - name: "RPA開発"
+  - name: "RPA開発(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=RPA"
+    contractType: fixed
     minBudget: 30000
+    openOnly: true
 
-  # --- 生成AI関連(ChatGPT/Claude等) ---
-  - name: "生成AI開発"
+  # =========================================================
+  # 生成AI関連(ChatGPT/Claude等)
+  # =========================================================
+  - name: "生成AI開発(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E7%94%9F%E6%88%90AI%E9%96%8B%E7%99%BA"
+    contractType: fixed
     minBudget: 30000
+    openOnly: true
 
-  - name: "ChatGPT活用開発"
+  - name: "ChatGPT活用開発(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=ChatGPT"
+    contractType: fixed
     minBudget: 30000
+    openOnly: true
 
-  - name: "Claude API活用"
+  - name: "Claude API活用(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Claude%20API"
+    contractType: fixed
     minBudget: 30000
+    openOnly: true
 
-  # --- Webツール・システム開発系 ---
-  - name: "Webアプリ開発"
+  # =========================================================
+  # Webツール・システム開発系
+  # =========================================================
+  - name: "Webアプリ開発(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Web%E3%82%A2%E3%83%97%E3%83%AA%E9%96%8B%E7%99%BA"
+    contractType: fixed
     minBudget: 50000
+    excludeKeywords: ["コーディングのみ", "LP制作のみ"]
+    openOnly: true
 
-  - name: "社内ツール開発"
+  - name: "Webアプリ開発(時間単価)"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Web%E3%82%A2%E3%83%97%E3%83%AA%E9%96%8B%E7%99%BA"
+    contractType: hourly
+    minHourlyRate: 2500
+    openOnly: true
+
+  - name: "社内ツール開発(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E7%A4%BE%E5%86%85%E3%83%84%E3%83%BC%E3%83%AB%E9%96%8B%E7%99%BA"
+    contractType: fixed
     minBudget: 30000
+    openOnly: true
 
-  - name: "業務システム開発"
+  - name: "業務システム開発(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E6%A5%AD%E5%8B%99%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E9%96%8B%E7%99%BA"
+    contractType: fixed
     minBudget: 30000
+    openOnly: true
 
-  # --- スクレイピング・データ処理系(自動化案件によく絡む) ---
-  - name: "スクレイピング開発"
+  # =========================================================
+  # 言語・技術別(例: Python)
+  # 今後、狙いたい技術が増えたらこの塊にブロックを追加していく
+  # =========================================================
+  - name: "Python開発(固定報酬)"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Python"
+    contractType: fixed
+    minBudget: 30000
+    openOnly: true
+
+  - name: "Python開発(時間単価)"
+    searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=Python"
+    contractType: hourly
+    minHourlyRate: 2000
+    openOnly: true
+
+  # =========================================================
+  # スクレイピング・データ処理系(自動化案件によく絡む)
+  # =========================================================
+  - name: "スクレイピング開発(固定報酬)"
     searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=%E3%82%B9%E3%82%AF%E3%83%AC%E3%82%A4%E3%83%94%E3%83%B3%E3%82%B0"
+    contractType: fixed
     minBudget: 30000
+    openOnly: true
 
-  # --- ここに新しいジャンルを追加していけます ---
-  # - name: "新しいジャンル名"
-  #   searchUrl: "https://crowdworks.jp/public/jobs/search?order=new&keyword=..."
+  # =========================================================
+  # ここに新しいジャンル・条件を追加していけます
+  # =========================================================
+  # - name: "新しいジャンル名(固定報酬)"
+  #   searchUrl: "（実際に検索・絞り込みを行った結果ページのURL）"
+  #   contractType: fixed
   #   minBudget: 30000
+  #   excludeKeywords: ["除外したい語"]
+  #   newOnly: false
+  #   openOnly: true
+  #
+  # - name: "新しいジャンル名(時間単価)"
+  #   searchUrl: "（実際に検索・絞り込みを行った結果ページのURL）"
+  #   contractType: hourly
+  #   minHourlyRate: 2000
+  #   openOnly: true

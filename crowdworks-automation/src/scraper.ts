@@ -62,8 +62,7 @@ export async function scrapeSearch(
       id: extractJobId(j.url),
       title: j.title,
       url: j.url,
-      budgetText: j.context,
-      postedAtText: "",
+      contextText: j.context,
       searchName: search.name,
     }));
 }

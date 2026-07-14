@@ -39,14 +39,51 @@ function validateSearchConditions(data: unknown, path: string): SearchConditions
       throw new Error(`${path} の searches[${i}] がオブジェクトではありません。`);
     }
     const entry = s as Partial<SearchCondition>;
+    const label = `searches[${i}]${entry.name ? `(${entry.name})` : ""}`;
+
     if (!entry.name || typeof entry.name !== "string") {
       throw new Error(`${path} の searches[${i}] に "name"(文字列)がありません。`);
     }
     if (!entry.searchUrl || typeof entry.searchUrl !== "string") {
-      throw new Error(`${path} の searches[${i}](${entry.name}) に "searchUrl"(文字列)がありません。`);
+      throw new Error(`${path} の ${label} に "searchUrl"(文字列)がありません。`);
+    }
+    if (
+      entry.contractType !== undefined &&
+      entry.contractType !== "fixed" &&
+      entry.contractType !== "hourly"
+    ) {
+      throw new Error(
+        `${path} の ${label} の "contractType" は "fixed" か "hourly" にしてください。`
+      );
     }
     if (entry.minBudget !== undefined && typeof entry.minBudget !== "number") {
-      throw new Error(`${path} の searches[${i}](${entry.name}) の "minBudget" は数値にしてください。`);
+      throw new Error(`${path} の ${label} の "minBudget" は数値にしてください。`);
+    }
+    if (entry.minHourlyRate !== undefined && typeof entry.minHourlyRate !== "number") {
+      throw new Error(`${path} の ${label} の "minHourlyRate" は数値にしてください。`);
+    }
+    if (entry.contractType === "hourly" && entry.minBudget !== undefined) {
+      throw new Error(
+        `${path} の ${label} は contractType: hourly なので "minBudget" ではなく "minHourlyRate" を使ってください。`
+      );
+    }
+    if ((entry.contractType ?? "fixed") === "fixed" && entry.minHourlyRate !== undefined) {
+      throw new Error(
+        `${path} の ${label} は contractType: fixed(または省略)なので "minHourlyRate" ではなく "minBudget" を使ってください。`
+      );
+    }
+    if (
+      entry.excludeKeywords !== undefined &&
+      (!Array.isArray(entry.excludeKeywords) ||
+        entry.excludeKeywords.some((k) => typeof k !== "string"))
+    ) {
+      throw new Error(`${path} の ${label} の "excludeKeywords" は文字列のリストにしてください。`);
+    }
+    if (entry.newOnly !== undefined && typeof entry.newOnly !== "boolean") {
+      throw new Error(`${path} の ${label} の "newOnly" は true/false にしてください。`);
+    }
+    if (entry.openOnly !== undefined && typeof entry.openOnly !== "boolean") {
+      throw new Error(`${path} の ${label} の "openOnly" は true/false にしてください。`);
     }
   });
   return data as SearchConditionsFile;
