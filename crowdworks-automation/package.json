@@ -11,10 +11,11 @@
     "run:test": "HEADFUL=1 TEST_MODE=1 TEST_SEARCH_LIMIT=1 TEST_JOB_LIMIT=5 TEST_DRAFT_LIMIT=1 tsx src/index.ts",
     "config:check": "tsx src/cliConfig.ts check",
     "config:update": "tsx src/cliConfig.ts update",
+    "redraft:test": "tsx src/cliRedraft.ts",
     "postinstall": "playwright install chromium"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.1",
+    "@anthropic-ai/sdk": "^0.111.0",
     "dotenv": "^16.4.5",
     "js-yaml": "^4.1.0",
     "playwright": "^1.48.2",

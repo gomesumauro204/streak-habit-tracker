@@ -38,15 +38,18 @@ async function waitForEnter(promptText: string): Promise<void> {
   }
 }
 
-/** ID/パスワードでログインし、2段階認証が要求された場合は人間の入力を待つ */
-async function performCredentialLogin(page: Page): Promise<void> {
+/** ID/パスワードでログインし、2段階認証が要求された場合は人間の入力を待つ。戻り値は2段階認証が発生したかどうか */
+async function performCredentialLogin(page: Page): Promise<{ twoFactorRequired: boolean }> {
   await page.goto("https://crowdworks.jp/login");
   await page.fill(SELECTORS.loginEmail, config.cwEmail);
   await page.fill(SELECTORS.loginPassword, config.cwPassword);
   await page.click(SELECTORS.loginSubmit);
   await page.waitForLoadState("domcontentloaded");
 
+  let twoFactorRequired = false;
+
   if (page.url().includes("two_step_authentication")) {
+    twoFactorRequired = true;
     if (!config.headful) {
       throw new Error(
         "2段階認証が必要ですが、ヘッドレスモードのため入力できません。" +
@@ -57,8 +60,8 @@ async function performCredentialLogin(page: Page): Promise<void> {
     console.log("");
     console.log("========================================");
     console.log("2段階認証が必要です。");
-    console.log("開いているブラウザ画面で、メールに届いた認証コードを入力し「認証する」を押してください。");
-    console.log("完了したら、このターミナルに戻って Enter キーを押してください。");
+    console.log("クラウドワークスから届いた認証コードを、現在開いているブラウザの認証画面へ");
+    console.log("直接入力してください。認証完了後、ターミナルへ戻ってEnterキーを押してください。");
     console.log("========================================");
     await waitForEnter("認証コード入力後、Enterを押してください: ");
     await page.waitForLoadState("domcontentloaded");
@@ -70,6 +73,15 @@ async function performCredentialLogin(page: Page): Promise<void> {
         "メールアドレス・パスワード・認証コードを確認してください。"
     );
   }
+
+  return { twoFactorRequired };
+}
+
+export interface LoginResult {
+  context: BrowserContext;
+  page: Page;
+  usedSavedSession: boolean;
+  twoFactorRequired: boolean;
 }
 
 /**
@@ -77,10 +89,9 @@ async function performCredentialLogin(page: Page): Promise<void> {
  * セッションが無い、または失効している場合のみ実際のログイン処理を行い、
  * 2段階認証が要求されたらheadfulモードで一時停止して人間の入力を待つ。
  * ログインに成功したら、次回以降のためにセッションを保存する。
+ * (認証コード自体はこの関数を含むコード上のどこにも保持・保存しない)
  */
-export async function ensureLoggedIn(
-  browser: Browser
-): Promise<{ context: BrowserContext; page: Page }> {
+export async function ensureLoggedIn(browser: Browser): Promise<LoginResult> {
   let context = await browser.newContext(
     hasSavedSession() ? { storageState: sessionFilePath } : {}
   );
@@ -88,7 +99,7 @@ export async function ensureLoggedIn(
 
   if (await isLoggedIn(page)) {
     console.log("保存済みセッションでログインできました(認証コードの入力は不要です)。");
-    return { context, page };
+    return { context, page, usedSavedSession: true, twoFactorRequired: false };
   }
 
   console.log(
@@ -102,12 +113,12 @@ export async function ensureLoggedIn(
   context = await browser.newContext();
   page = await context.newPage();
 
-  await performCredentialLogin(page);
+  const { twoFactorRequired } = await performCredentialLogin(page);
   await saveSession(context);
   console.log(`ログイン状態を保存しました: ${sessionFilePath}`);
   console.log("次回以降は、このセッションが有効な間、認証コードの入力は不要です。");
 
-  return { context, page };
+  return { context, page, usedSavedSession: false, twoFactorRequired };
 }
 
 /**
@@ -123,22 +134,35 @@ function extractJobId(url: string): string {
   return match ? match[1] : url;
 }
 
+export interface SearchScrapeResult {
+  jobs: Job[];
+  /** 案件詳細ページのURL形式に一致しなかったため除外したリンクの件数(カテゴリ・検索結果一覧等) */
+  excludedNonJobLinkCount: number;
+}
+
 export async function scrapeSearch(
   page: Page,
   search: SearchCondition
-): Promise<Job[]> {
+): Promise<SearchScrapeResult> {
   await page.goto(search.searchUrl);
   await page.waitForLoadState("networkidle");
 
-  const rawJobs = await page.$$eval(SELECTORS.jobLink, (anchors) => {
+  const { matched, excludedCount } = await page.$$eval(SELECTORS.jobLink, (anchors) => {
     const jobDetailUrlPattern = /\/public\/jobs\/(\d+)(?:[/?#]|$)/;
-    const seen = new Set<string>();
+    const seenAll = new Set<string>();
+    const seenMatched = new Set<string>();
     const results: { url: string; title: string; context: string }[] = [];
+    let excluded = 0;
     for (const a of anchors) {
       const href = (a as HTMLAnchorElement).href;
-      if (!jobDetailUrlPattern.test(href)) continue; // カテゴリ・検索結果一覧等の非案件ページを除外
-      if (seen.has(href)) continue;
-      seen.add(href);
+      if (seenAll.has(href)) continue;
+      seenAll.add(href);
+      if (!jobDetailUrlPattern.test(href)) {
+        excluded += 1; // カテゴリ・検索結果一覧等の非案件ページ
+        continue;
+      }
+      if (seenMatched.has(href)) continue;
+      seenMatched.add(href);
       const container = a.closest("li, article, div") ?? a;
       results.push({
         url: href,
@@ -146,10 +170,10 @@ export async function scrapeSearch(
         context: (container.textContent ?? "").trim(),
       });
     }
-    return results;
+    return { matched: results, excludedCount: excluded };
   });
 
-  return rawJobs
+  const jobs = matched
     .filter((j) => j.title.length > 0)
     .map((j) => ({
       id: extractJobId(j.url),
@@ -158,6 +182,8 @@ export async function scrapeSearch(
       contextText: j.context,
       searchName: search.name,
     }));
+
+  return { jobs, excludedNonJobLinkCount: excludedCount };
 }
 
 export async function scrapeJobDetail(

@@ -50,10 +50,6 @@ export interface JobWithDetail extends Job {
   description: string;
 }
 
-export interface JobDraft extends JobWithDetail {
-  draft: string;
-}
-
 export interface JobCriteria {
   /** 歓迎したい案件の特徴(参考情報。これに一致しなくても内容次第で採用され得る) */
   acceptKeywords: string[];
@@ -63,11 +59,66 @@ export interface JobCriteria {
   description?: string;
 }
 
+/**
+ * 案件本文からAIが抽出する構造化情報。
+ * 本文に記載が無い項目は undefined(または "不明")のまま扱う(推測で埋めない)。
+ */
+export interface JobMetadata {
+  clientName?: string;
+  budgetOrRate?: string;
+  deadline?: string;
+  requiredConditions?: string;
+  welcomeConditions?: string;
+  expectedHours?: string;
+  deliveryDate?: string;
+  applicationInstructions?: string;
+  applicationQuestions?: string[];
+  hasAttachments?: boolean;
+}
+
+export type JobClassification = "priority" | "candidate" | "review" | "excluded";
+
 export interface ScreeningResult {
-  accepted: boolean;
+  classification: JobClassification;
   reason: string;
+  metadata: JobMetadata;
 }
 
 export interface ScreenedJob extends JobWithDetail {
   screening: ScreeningResult;
+}
+
+export interface DraftResult {
+  draft: string;
+  candidacyReason: string;
+  concerns: string;
+  questionsToConfirm: string[];
+  suggestedRate: string;
+}
+
+export interface JobDraft extends ScreenedJob {
+  draftResult: DraftResult;
+}
+
+/** 応募文生成に必要な最小限の案件情報(本文全文は含まない) */
+export interface JobRef {
+  title: string;
+  url: string;
+  searchName?: string;
+}
+
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export interface DraftGenerationOutcome {
+  success: boolean;
+  result?: DraftResult;
+  /** 試行回数(1〜2。2回目は短い形式での再試行) */
+  attempts: number;
+  /** 各試行のトークン使用量 */
+  usages: TokenUsage[];
+  /** success:false のときの失敗理由 */
+  failureReason?: string;
 }
