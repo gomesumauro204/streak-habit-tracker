@@ -3,6 +3,61 @@
 新着案件を定期的にチェックし、AIが応募文のドラフトを作成してレポートにまとめるツールです。
 **送信は自動化しません**（講師の助言どおり半自動）。レポートを見て内容を確認・修正してから、自分でクラウドワークス上で応募してください。
 
+このツールは特定のエディタ/AIツール(Cursor、Claude Code等)に依存しません。
+**通常のmacOSターミナル(Terminal.app等)だけで動作します。**
+
+## 必要環境
+
+| 項目 | 必要バージョン | 確認コマンド |
+|---|---|---|
+| OS | macOS | - |
+| Node.js | v18以上(推奨: 最新LTS) | `node --version` |
+| pnpm | v8以上 | `pnpm --version` |
+
+Node.js/pnpmが入っていれば、Cursor・Claude Code・VS Code・素のTerminal.appなど、
+どのターミナルからでも同じように動作します(このツール自体は特定のツールの環境変数やPATHには一切依存しません)。
+
+## インストール(初回・環境構築)
+
+Node.js/pnpmが未導入の場合は、**通常のmacOSターミナル(Terminal.app)**で以下を実行してください。
+
+```bash
+# 1. Homebrewが無ければインストール(すでにある場合は不要)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# 2. Node.jsをインストール
+brew install node
+
+# 3. pnpmをインストール
+brew install pnpm
+
+# 4. 新しいターミナルを開き直す、または以下でPATHを反映
+source ~/.zprofile
+
+# 5. 確認
+node --version
+pnpm --version
+```
+
+> Node.js/pnpmはHomebrew以外(nvm、公式インストーラ等)で入れても構いません。
+> `node --version` / `pnpm --version` が通ればOKです。
+
+### `command not found: pnpm` が出た場合の対処
+
+1. **まず新しいターミナルウィンドウ/タブを開き直してみてください。**
+   Homebrewインストール直後の既存ターミナルは、古いPATH設定のままのことがあります
+2. それでも直らない場合:
+   ```bash
+   source ~/.zprofile
+   ```
+3. `brew` 自体が無い場合は、上記「インストール」の手順1から実施してください
+4. Node.jsは入っているのに `pnpm` だけ無い場合(Node.js 25以降は`corepack`が同梱されないことがあります):
+   ```bash
+   corepack enable && corepack prepare pnpm@latest --activate
+   # または
+   brew install pnpm
+   ```
+
 ## 処理の流れ
 
 検索条件に一致しただけでは応募対象にしません。「案件を探す」と「応募すべきか判定する」を
@@ -66,21 +121,51 @@ pnpm run run:test
 
 ## セットアップ(初回)
 
+**通常のmacOSターミナル**で以下を実行してください(Cursor/Claude Code等のツールは不要です)。
+
 ```bash
 cd crowdworks-automation
 pnpm install
 cp .env.example .env
-pnpm run config:update
+pnpm run setup
 ```
 
 - `.env` にクラウドワークスのログイン情報と Anthropic API キーを入力してください
-- `pnpm run config:update` を実行すると、`*.example.yaml` をもとに
-  `profile.yaml` / `search-conditions.yaml` / `job-criteria.yaml` が
-  まだ無ければ自動作成されます(詳細は下記「設定ファイルの管理の仕組み」参照)
+- `pnpm run setup` は環境全体を診断するコマンドです。以下を確認し、問題があれば
+  具体的な対応コマンドを表示します(詳細は下記「環境セットアップの確認(pnpm run setup)」参照)
+  - Node.jsが導入されているか・バージョンは十分か
+  - pnpmが使用できるか
+  - Playwright Chromiumがインストールされているか
+  - `.env` が存在し、必要な項目が入力されているか
+  - 設定ファイル(`*.yaml`)が存在するか
+- 設定ファイルがまだ無い場合は、続けて以下を実行してください
+  ```bash
+  pnpm run config:update
+  ```
+  `*.example.yaml` をもとに `profile.yaml` / `search-conditions.yaml` / `job-criteria.yaml` が
+  自動作成されます(詳細は下記「設定ファイルの管理の仕組み」参照)
 - その後、以下を編集してください
   1. `search-conditions.yaml` : 検索条件（`searchUrl` を実際の検索結果URLに差し替え。詳細は後述）
   2. `job-criteria.yaml` : 応募対象の判定基準（詳細は下記「応募対象判定」参照）
   3. `profile.yaml` : 名前・強み・ポートフォリオ・稼働条件など（詳細は下記「応募者プロフィール」参照）
+- 準備ができたら、まずは安全なテストモードで動作確認してください
+  ```bash
+  pnpm run run:test
+  ```
+
+## 環境セットアップの確認(pnpm run setup)
+
+```bash
+pnpm run setup
+```
+
+Node.js/pnpm/Playwright/設定ファイルの状態をまとめて確認する診断コマンドです。
+`config.ts`(本体のロジック)には依存しない、独立したチェック専用のスクリプト
+([src/cliSetup.ts](src/cliSetup.ts))なので、`.env` が無い状態でも安全に実行できます。
+
+- ✅ 問題なし / ⚠ 動作はするが要確認 / ❌ 対応が必要、の3段階で表示します
+- ❌ の項目には、実行すべき具体的なコマンドが添えられます
+- 何か問題が起きたときの切り分けにも使えます(まずこのコマンドを実行してみてください)
 
 ## 設定ファイルの管理の仕組み
 
