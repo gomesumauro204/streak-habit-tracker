@@ -110,8 +110,16 @@ export async function ensureLoggedIn(
   return { context, page };
 }
 
+/**
+ * 案件詳細ページのURLは "/public/jobs/数字" の形式(例: /public/jobs/1234567)。
+ * 検索結果一覧(/public/jobs/search)やカテゴリ・グループページ
+ * (/public/jobs/category/xxx, /public/jobs/group/xxx 等)はこの形式に一致しないため、
+ * この正規表現で個別の案件詳細ページだけに絞り込む。
+ */
+const JOB_DETAIL_URL_PATTERN = /\/public\/jobs\/(\d+)(?:[/?#]|$)/;
+
 function extractJobId(url: string): string {
-  const match = url.match(/\/public\/jobs\/(\d+)/);
+  const match = url.match(JOB_DETAIL_URL_PATTERN);
   return match ? match[1] : url;
 }
 
@@ -123,10 +131,12 @@ export async function scrapeSearch(
   await page.waitForLoadState("networkidle");
 
   const rawJobs = await page.$$eval(SELECTORS.jobLink, (anchors) => {
+    const jobDetailUrlPattern = /\/public\/jobs\/(\d+)(?:[/?#]|$)/;
     const seen = new Set<string>();
     const results: { url: string; title: string; context: string }[] = [];
     for (const a of anchors) {
       const href = (a as HTMLAnchorElement).href;
+      if (!jobDetailUrlPattern.test(href)) continue; // カテゴリ・検索結果一覧等の非案件ページを除外
       if (seen.has(href)) continue;
       seen.add(href);
       const container = a.closest("li, article, div") ?? a;
