@@ -23,10 +23,45 @@ export async function launchBrowser(): Promise<Browser> {
   return chromium.launch({ headless: !config.headful });
 }
 
-async function isLoggedIn(page: Page): Promise<boolean> {
+export interface LoginCheckDetail {
+  loggedIn: boolean;
+  hasLogoutLink: boolean;
+  hasNotFoundMarker: boolean;
+  loginLinkCount: number;
+}
+
+/**
+ * ログイン状態を判定する。
+ *
+ * 【重要】未ログイン状態で /mypage にアクセスすると、クラウドワークスは
+ * "/login" へリダイレクトせず、URLはそのまま /mypage で
+ * 「ページが見つかりませんでした」という内容を返す(実機で確認済み)。
+ * そのため URL に "/login" が含まれるかどうかだけでは絶対に判定しないこと
+ * (未ログインを誤ってログイン済みと判定してしまう既知の不具合の原因だった)。
+ *
+ * 代わりに、ログイン後にしか表示されない要素の有無を複数組み合わせて判定する:
+ *   - 「ログアウト」の文言がある(ログイン時のみ表示される)
+ *   - 「ページが見つかりませんでした」が出ていない(未ログイン時のmypage特有の表示)
+ *   - "/login" へ誘導するリンクが無い(ログイン済みなら通常表示されない)
+ * 3条件すべてを満たした場合のみログイン済みと判定する。
+ */
+async function checkLoginState(page: Page): Promise<LoginCheckDetail> {
   await page.goto(MYPAGE_URL);
   await page.waitForLoadState("domcontentloaded");
-  return !page.url().includes("/login");
+
+  const bodyText = await page.evaluate(() => document.body.innerText);
+  const hasLogoutLink = bodyText.includes("ログアウト");
+  const hasNotFoundMarker = bodyText.includes("ページが見つかりませんでした");
+  const loginLinkCount = await page.locator('a[href*="/login"]').count();
+
+  const loggedIn = hasLogoutLink && !hasNotFoundMarker && loginLinkCount === 0;
+
+  return { loggedIn, hasLogoutLink, hasNotFoundMarker, loginLinkCount };
+}
+
+async function isLoggedIn(page: Page): Promise<boolean> {
+  const detail = await checkLoginState(page);
+  return detail.loggedIn;
 }
 
 async function waitForEnter(promptText: string): Promise<void> {
@@ -59,11 +94,14 @@ async function performCredentialLogin(page: Page): Promise<{ twoFactorRequired: 
     }
     console.log("");
     console.log("========================================");
-    console.log("2段階認証が必要です。");
-    console.log("クラウドワークスから届いた認証コードを、現在開いているブラウザの認証画面へ");
-    console.log("直接入力してください。認証完了後、ターミナルへ戻ってEnterキーを押してください。");
+    console.log(
+      "クラウドワークスから届いた認証コードを、開いているブラウザの認証画面へ直接入力してください。" +
+        "認証完了後、ターミナルへ戻ってEnterキーを押してください。"
+    );
     console.log("========================================");
-    await waitForEnter("認証コード入力後、Enterを押してください: ");
+    // 認証コードそのものはここで受け取らない(Enterキーの通知のみ)。
+    // ログ・ファイル・レポートのどこにも認証コードは保存されない。
+    await waitForEnter("認証完了後、Enterを押してください: ");
     await page.waitForLoadState("domcontentloaded");
   }
 
@@ -82,43 +120,59 @@ export interface LoginResult {
   page: Page;
   usedSavedSession: boolean;
   twoFactorRequired: boolean;
+  loginCheck: LoginCheckDetail;
 }
 
 /**
  * 保存済みセッション(data/session.json)があれば再利用してログイン状態を復元する。
  * セッションが無い、または失効している場合のみ実際のログイン処理を行い、
  * 2段階認証が要求されたらheadfulモードで一時停止して人間の入力を待つ。
- * ログインに成功したら、次回以降のためにセッションを保存する。
+ * ログイン後にしか表示されない要素で成功を再確認できた場合のみ、
+ * 次回以降のためにセッションを保存する。確認できなければエラーで処理を中断する
+ * (未ログイン状態の公開ページ取得を「ログイン成功」として扱わない)。
  * (認証コード自体はこの関数を含むコード上のどこにも保持・保存しない)
  */
 export async function ensureLoggedIn(browser: Browser): Promise<LoginResult> {
+  const sessionFileExisted = hasSavedSession();
+
   let context = await browser.newContext(
-    hasSavedSession() ? { storageState: sessionFilePath } : {}
+    sessionFileExisted ? { storageState: sessionFilePath } : {}
   );
   let page = await context.newPage();
 
-  if (await isLoggedIn(page)) {
-    console.log("保存済みセッションでログインできました(認証コードの入力は不要です)。");
-    return { context, page, usedSavedSession: true, twoFactorRequired: false };
+  if (sessionFileExisted) {
+    const detail = await checkLoginState(page);
+    if (detail.loggedIn) {
+      console.log("保存済みセッションでログインできました(認証コードの入力は不要です)。");
+      return { context, page, usedSavedSession: true, twoFactorRequired: false, loginCheck: detail };
+    }
+    console.log("保存済みセッションが失効していました(ログイン後の要素を確認できませんでした)。再ログインします。");
+  } else {
+    console.log("保存済みセッション(data/session.json)が無いため、ログインします。");
   }
 
-  console.log(
-    hasSavedSession()
-      ? "保存済みセッションが失効していました。再ログインします。"
-      : "保存済みセッションが無いため、ログインします。"
-  );
-
-  // 失効したセッション情報を引きずらないよう、新しいまっさらなコンテキストでやり直す
+  // 失効/未使用のセッション情報を引きずらないよう、新しいまっさらなコンテキストでやり直す
   await context.close();
   context = await browser.newContext();
   page = await context.newPage();
 
   const { twoFactorRequired } = await performCredentialLogin(page);
+
+  // ログイン処理完了後、ログイン後にしか表示されない要素で本当にログインできたか再確認する
+  const confirmedDetail = await checkLoginState(page);
+  if (!confirmedDetail.loggedIn) {
+    throw new Error(
+      "ログイン処理は完了しましたが、ログイン後にしか表示されない要素(ログアウトリンク等)を" +
+        "確認できませんでした。ログインに失敗している可能性があるため処理を中断します。" +
+        `(hasLogoutLink=${confirmedDetail.hasLogoutLink}, hasNotFoundMarker=${confirmedDetail.hasNotFoundMarker}, loginLinkCount=${confirmedDetail.loginLinkCount})`
+    );
+  }
+
   await saveSession(context);
-  console.log(`ログイン状態を保存しました: ${sessionFilePath}`);
+  console.log(`ログイン成功を確認し、ログイン状態を保存しました: ${sessionFilePath}`);
   console.log("次回以降は、このセッションが有効な間、認証コードの入力は不要です。");
 
-  return { context, page, usedSavedSession: false, twoFactorRequired };
+  return { context, page, usedSavedSession: false, twoFactorRequired, loginCheck: confirmedDetail };
 }
 
 /**
