@@ -55,9 +55,14 @@ async function main() {
   console.log(`- 手動ログイン(ID/パスワード)が必要だったか: ${r.usedSavedSession ? "いいえ" : "はい"}`);
   console.log(`- 認証コード入力が必要だったか: ${r.twoFactorRequired ? "はい" : "いいえ"}`);
   console.log("- ログイン後の固有要素の確認結果:");
-  console.log(`    ログアウトリンクあり: ${r.loginCheck.hasLogoutLink}`);
-  console.log(`    「ページが見つかりませんでした」表示なし: ${!r.loginCheck.hasNotFoundMarker}`);
-  console.log(`    /loginへのリンク数: ${r.loginCheck.loginLinkCount}(0であることを期待)`);
+  console.log(`    URL: ${r.loginCheck.url}`);
+  console.log(`    「マイページ」見出し: ${r.loginCheck.hasMyPageHeading}`);
+  console.log(`    「クライアントメニューに切り替える」: ${r.loginCheck.hasClientMenuSwitch}`);
+  console.log(`    アカウント名パターン(「〜さん」): ${r.loginCheck.hasAccountNamePattern}`);
+  console.log(`    「契約一覧」ナビゲーション: ${r.loginCheck.hasContractListNav}`);
+  console.log(`    「報酬」ナビゲーション: ${r.loginCheck.hasRewardNav}`);
+  console.log(`    「メッセージ」ナビゲーション: ${r.loginCheck.hasMessageNav}`);
+  console.log(`    一致数: ${r.loginCheck.positiveMatchCount}件(2件以上で判定)`);
   console.log(`data/session.json の有無(実行前→実行後): ${sessionExistedBefore ? "あり" : "なし"} → ${sessionExistsAfter ? "あり" : "なし"}`);
   console.log("");
   console.log("案件検索・案件取得・AI判定・応募文生成・応募操作は行っていません。");

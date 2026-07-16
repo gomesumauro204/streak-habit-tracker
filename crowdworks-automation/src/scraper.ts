@@ -17,7 +17,20 @@ const SELECTORS = {
   jobLink: 'a[href^="/public/jobs/"]',
 };
 
-const MYPAGE_URL = "https://crowdworks.jp/mypage";
+/**
+ * ログイン確認に使うページ。
+ *
+ * 【重要】以前は /mypage を使っていたが、これは未ログイン・ログイン済み
+ * どちらの状態でアクセスしても "/login" へリダイレクトされず、常に
+ * 「ページが見つかりませんでした」を返す実質的に無効なURLだった(実機で確認済み)。
+ * そのため /mypage の表示内容ではログイン状態を正しく判定できない。
+ *
+ * /dashboard は認証必須のページで、未ログイン時は確実に /login へ
+ * リダイレクトされることを実機で確認済み(2026-07-16)。ログイン済みの場合は
+ * 「マイページ」の見出し・契約一覧・報酬・メッセージ等のナビゲーションを含む
+ * ダッシュボード画面が表示される。
+ */
+const DASHBOARD_URL = "https://crowdworks.jp/dashboard";
 
 export async function launchBrowser(): Promise<Browser> {
   return chromium.launch({ headless: !config.headful });
@@ -25,38 +38,98 @@ export async function launchBrowser(): Promise<Browser> {
 
 export interface LoginCheckDetail {
   loggedIn: boolean;
-  hasLogoutLink: boolean;
-  hasNotFoundMarker: boolean;
-  loginLinkCount: number;
+  url: string;
+  /** ログインフォーム(email入力欄)が存在するか。存在すれば未ログイン確定 */
+  hasLoginForm: boolean;
+  /** URLが /login を含むか。含めば未ログイン確定 */
+  isLoginUrl: boolean;
+  /** 「マイページ」の見出しがあるか */
+  hasMyPageHeading: boolean;
+  /** 「クライアントメニューに切り替える」があるか */
+  hasClientMenuSwitch: boolean;
+  /** 「(何か)さん」という形式のアカウント名表示があるか */
+  hasAccountNamePattern: boolean;
+  /** 「契約一覧」のナビゲーションがあるか */
+  hasContractListNav: boolean;
+  /** 「報酬」のナビゲーションがあるか */
+  hasRewardNav: boolean;
+  /** 「メッセージ」のナビゲーションがあるか */
+  hasMessageNav: boolean;
+  /** 上記ログイン後専用要素のうち、いくつ一致したか */
+  positiveMatchCount: number;
+}
+
+function logLoginCheckDetail(detail: LoginCheckDetail): void {
+  console.log("[login-check] 現在のURL:", detail.url);
+  console.log(
+    `[login-check] ログインフォーム(input[name="username"])の有無: ${detail.hasLoginForm}(あれば未ログイン確定)`
+  );
+  console.log(`[login-check] URLに/loginを含むか: ${detail.isLoginUrl}(含めば未ログイン確定)`);
+  console.log(`[login-check] 「マイページ」見出し: ${detail.hasMyPageHeading}`);
+  console.log(`[login-check] 「クライアントメニューに切り替える」: ${detail.hasClientMenuSwitch}`);
+  console.log(`[login-check] アカウント名パターン(「〜さん」): ${detail.hasAccountNamePattern}`);
+  console.log(`[login-check] 「契約一覧」ナビゲーション: ${detail.hasContractListNav}`);
+  console.log(`[login-check] 「報酬」ナビゲーション: ${detail.hasRewardNav}`);
+  console.log(`[login-check] 「メッセージ」ナビゲーション: ${detail.hasMessageNav}`);
+  console.log(`[login-check] ログイン後専用要素の一致数: ${detail.positiveMatchCount}件(2件以上で判定対象)`);
 }
 
 /**
- * ログイン状態を判定する。
+ * ログイン状態を判定する。認証情報・Cookieの中身・認証コードはログに一切出力しない。
  *
- * 【重要】未ログイン状態で /mypage にアクセスすると、クラウドワークスは
- * "/login" へリダイレクトせず、URLはそのまま /mypage で
- * 「ページが見つかりませんでした」という内容を返す(実機で確認済み)。
- * そのため URL に "/login" が含まれるかどうかだけでは絶対に判定しないこと
- * (未ログインを誤ってログイン済みと判定してしまう既知の不具合の原因だった)。
- *
- * 代わりに、ログイン後にしか表示されない要素の有無を複数組み合わせて判定する:
- *   - 「ログアウト」の文言がある(ログイン時のみ表示される)
- *   - 「ページが見つかりませんでした」が出ていない(未ログイン時のmypage特有の表示)
- *   - "/login" へ誘導するリンクが無い(ログイン済みなら通常表示されない)
- * 3条件すべてを満たした場合のみログイン済みと判定する。
+ * 判定ルール: 以下の除外条件に該当せず、かつログイン後専用要素が2件以上一致した場合のみ
+ * ログイン済みと判定する。
+ *   除外条件: ログインフォームが存在する / URLが /login を含む
+ *   ログイン後専用要素: 「マイページ」見出し・「クライアントメニューに切り替える」・
+ *     「〜さん」のアカウント名表示・「契約一覧」・「報酬」・「メッセージ」ナビゲーション
  */
 async function checkLoginState(page: Page): Promise<LoginCheckDetail> {
-  await page.goto(MYPAGE_URL);
-  await page.waitForLoadState("domcontentloaded");
+  await page.goto(DASHBOARD_URL);
+  await page.waitForLoadState("networkidle");
 
+  const url = page.url();
   const bodyText = await page.evaluate(() => document.body.innerText);
-  const hasLogoutLink = bodyText.includes("ログアウト");
-  const hasNotFoundMarker = bodyText.includes("ページが見つかりませんでした");
-  const loginLinkCount = await page.locator('a[href*="/login"]').count();
 
-  const loggedIn = hasLogoutLink && !hasNotFoundMarker && loginLinkCount === 0;
+  const hasLoginForm = (await page.locator('input[name="username"]').count()) > 0;
+  const isLoginUrl = url.includes("/login");
 
-  return { loggedIn, hasLogoutLink, hasNotFoundMarker, loginLinkCount };
+  const hasMyPageHeading = bodyText.includes("マイページ");
+  const hasClientMenuSwitch = bodyText.includes("クライアントメニューに切り替える");
+  const hasAccountNamePattern = /\S+さん/.test(bodyText);
+  const hasContractListNav = bodyText.includes("契約一覧");
+  const hasRewardNav = bodyText.includes("報酬");
+  const hasMessageNav = bodyText.includes("メッセージ");
+
+  const positiveMatchCount = [
+    hasMyPageHeading,
+    hasClientMenuSwitch,
+    hasAccountNamePattern,
+    hasContractListNav,
+    hasRewardNav,
+    hasMessageNav,
+  ].filter(Boolean).length;
+
+  const loggedIn = !hasLoginForm && !isLoginUrl && positiveMatchCount >= 2;
+
+  const detail: LoginCheckDetail = {
+    loggedIn,
+    url,
+    hasLoginForm,
+    isLoginUrl,
+    hasMyPageHeading,
+    hasClientMenuSwitch,
+    hasAccountNamePattern,
+    hasContractListNav,
+    hasRewardNav,
+    hasMessageNav,
+    positiveMatchCount,
+  };
+
+  if (!loggedIn) {
+    logLoginCheckDetail(detail);
+  }
+
+  return detail;
 }
 
 async function isLoggedIn(page: Page): Promise<boolean> {
@@ -162,9 +235,9 @@ export async function ensureLoggedIn(browser: Browser): Promise<LoginResult> {
   const confirmedDetail = await checkLoginState(page);
   if (!confirmedDetail.loggedIn) {
     throw new Error(
-      "ログイン処理は完了しましたが、ログイン後にしか表示されない要素(ログアウトリンク等)を" +
-        "確認できませんでした。ログインに失敗している可能性があるため処理を中断します。" +
-        `(hasLogoutLink=${confirmedDetail.hasLogoutLink}, hasNotFoundMarker=${confirmedDetail.hasNotFoundMarker}, loginLinkCount=${confirmedDetail.loginLinkCount})`
+      "ログイン処理は完了しましたが、ログイン後にしか表示されない要素を" +
+        `確認できませんでした(一致数=${confirmedDetail.positiveMatchCount}件、2件以上が必要)。` +
+        "ログインに失敗している可能性があるため処理を中断します。詳細は直前のログを参照してください。"
     );
   }
 
