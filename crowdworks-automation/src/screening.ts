@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { config, loadJobCriteria } from "./config.js";
-import type { JobClassification, JobMetadata, JobWithDetail, ScreeningResult } from "./types.js";
+import type { JobClassification, JobMetadata, JobWithDetail, ScreeningResult, TokenUsage } from "./types.js";
 
 const anthropic = new Anthropic({ apiKey: config.anthropicApiKey });
 
@@ -40,12 +40,20 @@ function normalizeMetadata(raw: unknown): JobMetadata {
  * 最終判断はタイトル・本文の内容にもとづいて行わせる(キーワードの機械的な一致だけで
  * 判定しないのがポイント)。
  */
-export async function screenJob(job: JobWithDetail): Promise<ScreeningResult> {
+export interface ScreenJobOutcome {
+  result: ScreeningResult;
+  usage: TokenUsage;
+}
+
+export async function screenJob(job: JobWithDetail): Promise<ScreenJobOutcome> {
   const criteria = loadJobCriteria();
 
   const message = await anthropic.messages.create({
     model: "claude-sonnet-5",
     max_tokens: 1200,
+    // 単純な分類・抽出タスクのため思考は不要。Sonnet 5はthinking省略時に
+    // adaptive thinkingが暗黙で有効になりmax_tokens予算を消費するため、明示的に無効化する。
+    thinking: { type: "disabled" },
     system:
       "あなたはフリーランス案件の応募可否を判定するアシスタントです。" +
       "案件のタイトル・案件情報・本文を読み、実際にどんな作業を依頼されているのかを理解した上で判定してください。" +
@@ -76,6 +84,10 @@ export async function screenJob(job: JobWithDetail): Promise<ScreeningResult> {
 
   const textBlock = message.content.find((b) => b.type === "text");
   const text = textBlock && textBlock.type === "text" ? textBlock.text : "";
+  const usage: TokenUsage = {
+    inputTokens: message.usage.input_tokens,
+    outputTokens: message.usage.output_tokens,
+  };
 
   try {
     const parsed = JSON.parse(extractJson(text)) as {
@@ -87,16 +99,22 @@ export async function screenJob(job: JobWithDetail): Promise<ScreeningResult> {
       ? (parsed.classification as JobClassification)
       : "review";
     return {
-      classification,
-      reason: typeof parsed.reason === "string" ? parsed.reason : "(理由の取得に失敗)",
-      metadata: normalizeMetadata(parsed.metadata),
+      result: {
+        classification,
+        reason: typeof parsed.reason === "string" ? parsed.reason : "(理由の取得に失敗)",
+        metadata: normalizeMetadata(parsed.metadata),
+      },
+      usage,
     };
   } catch {
     // 判定結果を解析できない場合は、誤って自動で見落とさないよう「要確認」に倒す
     return {
-      classification: "review",
-      reason: `判定結果の解析に失敗したため要確認としました: ${text.slice(0, 80)}`,
-      metadata: {},
+      result: {
+        classification: "review",
+        reason: `判定結果の解析に失敗したため要確認としました: ${text.slice(0, 80)}`,
+        metadata: {},
+      },
+      usage,
     };
   }
 }

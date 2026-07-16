@@ -13,6 +13,7 @@
     "config:update": "tsx src/cliConfig.ts update",
     "redraft:test": "tsx src/cliRedraft.ts",
     "login:check": "HEADFUL=1 tsx src/cliLoginCheck.ts",
+    "test:final": "HEADFUL=1 tsx src/cliFinalTest.ts",
     "postinstall": "playwright install chromium"
   },
   "dependencies": {

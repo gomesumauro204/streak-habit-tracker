@@ -156,7 +156,7 @@ async function main() {
       seenJobIds.add(job.id);
 
       console.log(`応募対象判定中: ${job.title}`);
-      const screening = await screenJob(detail);
+      const { result: screening } = await screenJob(detail);
       const screenedJob: ScreenedJob = { ...detail, screening };
       console.log(`  → ${classificationLabel(screening.classification)}: ${screening.reason}`);
 
