@@ -9,6 +9,7 @@
     "run": "tsx src/index.ts",
     "run:headful": "HEADFUL=1 tsx src/index.ts",
     "run:test": "HEADFUL=1 TEST_MODE=1 TEST_SEARCH_LIMIT=1 TEST_JOB_LIMIT=5 TEST_DRAFT_LIMIT=1 tsx src/index.ts",
+    "run:trial": "HEADFUL=1 TEST_MODE=1 TEST_JOB_LIMIT=3 tsx src/index.ts",
     "config:check": "tsx src/cliConfig.ts check",
     "config:update": "tsx src/cliConfig.ts update",
     "redraft:test": "tsx src/cliRedraft.ts",

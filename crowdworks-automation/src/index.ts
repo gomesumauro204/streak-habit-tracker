@@ -90,11 +90,17 @@ function classificationLabel(c: JobClassification): string {
  * - TEST_SEARCH_LIMIT=n    : (--search/--search-all未指定時のみ)先頭 n 件の検索条件だけ使う
  * - TEST_JOB_LIMIT=n       : 検索条件ごとに、詳細取得・判定の対象を先頭 n 件までに絞る
  * - TEST_DRAFT_LIMIT=n     : 応募文ドラフトの生成を、優先応募候補→応募候補の順で上位 n 件までに絞る
+ *
+ * 通常運用の挙動(環境変数不要・常時有効):
+ * - CANDIDATE_LIMIT=n      : 優先応募候補+応募候補の合計が n 件に達した時点でAI判定を打ち切る。
+ *                            既定値は 1(=候補が1件見つかった時点で以降の案件確認を停止)。
+ *                            無制限にしたい場合は CANDIDATE_LIMIT=0 を指定する。
  */
 const testMode = process.env.TEST_MODE === "1";
 const searchLimit = process.env.TEST_SEARCH_LIMIT ? Number(process.env.TEST_SEARCH_LIMIT) : undefined;
 const perSearchJobLimit = process.env.TEST_JOB_LIMIT ? Number(process.env.TEST_JOB_LIMIT) : undefined;
 const draftLimit = process.env.TEST_DRAFT_LIMIT ? Number(process.env.TEST_DRAFT_LIMIT) : undefined;
+const candidateLimit = process.env.CANDIDATE_LIMIT ? Number(process.env.CANDIDATE_LIMIT) : 1;
 
 async function main() {
   ensureConfigsUpToDate();
@@ -102,9 +108,13 @@ async function main() {
   const { searches: allSearches } = loadSearchConditions();
   const searches = resolveSearches(allSearches);
 
+  console.log(
+    `検索条件(${searches.length}件): ${searches.map((s) => s.name).join(", ")}`
+  );
+  console.log(`候補が見つかった時点での停止設定: CANDIDATE_LIMIT=${candidateLimit || "無制限"}`);
   if (testMode) {
     console.log(
-      `[テストモード] 検索条件=${searches.map((s) => s.name).join(", ")} / job(条件毎)=${perSearchJobLimit ?? "無制限"} / draft=${draftLimit ?? "無制限"} / 既読状態は更新しません`
+      `[テストモード] job(条件毎)=${perSearchJobLimit ?? "無制限"} / draft=${draftLimit ?? "無制限"} / 既読状態は更新しません`
     );
   }
 
@@ -149,6 +159,13 @@ async function main() {
   const excluded: ScreenedJob[] = [];
 
   for (const job of newJobs) {
+    if (candidateLimit && priority.length + candidate.length >= candidateLimit) {
+      console.log(
+        `応募候補が${candidateLimit}件見つかったため、以降の案件確認を停止します(CANDIDATE_LIMIT=${candidateLimit})。`
+      );
+      break;
+    }
+
     try {
       console.log(`詳細取得中: ${job.title}`);
       const detail = await scrapeJobDetail(page, job);
